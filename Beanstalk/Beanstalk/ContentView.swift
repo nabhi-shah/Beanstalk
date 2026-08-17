@@ -1,0 +1,266 @@
+import SwiftUI
+import PhosphorSwift
+
+struct ContentView: View {
+    @State private var isLogin = true
+    @State private var email = ""
+    @State private var password = ""
+    @FocusState private var focusedField: Field?
+
+    enum Field {
+        case email
+        case password
+    }
+
+    var body: some View {
+        VStack(spacing: 32) {
+            Image("BeanstalkLogo")
+                .renderingMode(.original)
+                .resizable()
+                .scaledToFit()
+                .frame(height: 36)
+                .padding(.top, 60)
+                .padding(.bottom, 16)
+
+            // Tabs
+            HStack(spacing: 12) {
+                TabButton(title: "Login", isActive: isLogin) {
+                    withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
+                        isLogin = true
+                    }
+                }
+                TabButton(title: "Signup", isActive: !isLogin) {
+                    withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
+                        isLogin = false
+                    }
+                }
+            }
+            .background(GooeyTabBackground(isLogin: isLogin))
+
+            // Form
+            VStack(spacing: 16) {
+                // Email Field
+                InputField(
+                    placeholder: "Email address",
+                    text: $email,
+                    isFocused: focusedField == .email
+                ) {
+                    Ph.at.regular
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 24, height: 24)
+                        .foregroundColor(focusedField == .email ? .linkGreen : .textSecondary)
+                }
+                .focused($focusedField, equals: .email)
+
+                // Password Field
+                InputField(
+                    placeholder: "Password",
+                    text: $password,
+                    isSecure: true,
+                    isFocused: focusedField == .password
+                ) {
+                    Ph.password.regular
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 24, height: 24)
+                        .foregroundColor(focusedField == .password ? .linkGreen : .textSecondary)
+                }
+                .focused($focusedField, equals: .password)
+            }
+            .padding(.top, 8)
+
+            // Forgot Password
+            Button("Forgot Password") {
+                // Action
+            }
+            .font(.custom("InclusiveSans-Regular", size: 15))
+            .foregroundColor(.linkGreen)
+            .padding(.top, 8)
+
+            // Submit Button
+            Button(action: {
+                // Action
+            }) {
+                Text(isLogin ? "Login" : "Signup")
+                    .font(.custom("InclusiveSans-Regular", size: 18))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(Color.brandGreen)
+                    .clipShape(Capsule())
+            }
+            .padding(.top, 8)
+
+            Spacer()
+        }
+        .padding(.horizontal, 24)
+        .background(Color.appBackground)
+        .onTapGesture {
+            focusedField = nil
+        }
+    }
+}
+
+struct GooeyTabBackground: View {
+    var isLogin: Bool
+    
+    var body: some View {
+        GeometryReader { proxy in
+            let spacing: CGFloat = 12
+            let tabWidth = (proxy.size.width - spacing) / 2
+            let tabHeight = proxy.size.height
+            
+            ZStack {
+                // Inactive backgrounds
+                HStack(spacing: spacing) {
+                    Capsule().fill(Color.secondaryBackground)
+                        .frame(width: tabWidth)
+                    Capsule().fill(Color.secondaryBackground)
+                        .frame(width: tabWidth)
+                }
+                
+                // Gooey active fluid
+                Canvas { context, size in
+                    context.addFilter(.alphaThreshold(min: 0.5, color: .black))
+                    context.addFilter(.blur(radius: 12))
+                    
+                    context.drawLayer { ctx in
+                        if let resolved = context.resolveSymbol(id: 1) {
+                            ctx.draw(resolved, at: CGPoint(x: size.width / 2, y: size.height / 2))
+                        }
+                    }
+                } symbols: {
+                    ZStack(alignment: .topLeading) {
+                        // Anchor 1 (Login)
+                        Capsule()
+                            .fill(Color.black)
+                            .frame(width: isLogin ? tabWidth : 0, height: isLogin ? tabHeight : 0)
+                            .position(x: tabWidth / 2, y: tabHeight / 2)
+                        
+                        // Anchor 2 (Signup)
+                        Capsule()
+                            .fill(Color.black)
+                            .frame(width: !isLogin ? tabWidth : 0, height: !isLogin ? tabHeight : 0)
+                            .position(x: tabWidth + spacing + tabWidth / 2, y: tabHeight / 2)
+                        
+                        // The traveling fluid bridge
+                        Color.clear
+                            .modifier(FluidBridgeModifier(
+                                progress: isLogin ? 0 : 1,
+                                tabWidth: tabWidth,
+                                tabHeight: tabHeight,
+                                spacing: spacing
+                            ))
+                    }
+                    .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
+                    .tag(1)
+                }
+                .padding(-30) // Adds invisible breathing room so the spring bounce & blur aren't cropped
+                .colorMultiply(Color.textDark)
+            }
+        }
+    }
+}
+
+struct FluidBridgeModifier: ViewModifier, Animatable {
+    var progress: CGFloat
+    var tabWidth: CGFloat
+    var tabHeight: CGFloat
+    var spacing: CGFloat
+    
+    var animatableData: CGFloat {
+        get { progress }
+        set { progress = newValue }
+    }
+    
+    func body(content: Content) -> some View {
+        let sinProgress = sin(progress * .pi)
+        
+        // Fluid gets thinner as it stretches
+        let currentHeight = tabHeight * (1 - sinProgress * 0.6)
+        
+        // Fluid stretches across the gap
+        let currentWidth = tabWidth + (sinProgress * spacing * 2.5)
+        
+        let startCenterX = tabWidth / 2
+        let endCenterX = tabWidth + spacing + tabWidth / 2
+        let currentCenterX = startCenterX + progress * (endCenterX - startCenterX)
+        
+        return Capsule()
+            .fill(Color.black)
+            .frame(width: currentWidth, height: currentHeight)
+            .position(x: currentCenterX, y: tabHeight / 2)
+    }
+}
+
+struct TabButton: View {
+    let title: String
+    let isActive: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.custom("InclusiveSans-Regular", size: 16))
+                .foregroundColor(isActive ? .white : .textDark)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .contentShape(Capsule())
+        }
+    }
+}
+
+struct InputField<Icon: View>: View {
+    let placeholder: String
+    @Binding var text: String
+    var isSecure: Bool = false
+    var isFocused: Bool
+    let icon: Icon
+
+    init(
+        placeholder: String,
+        text: Binding<String>,
+        isSecure: Bool = false,
+        isFocused: Bool,
+        @ViewBuilder icon: () -> Icon
+    ) {
+        self.placeholder = placeholder
+        self._text = text
+        self.isSecure = isSecure
+        self.isFocused = isFocused
+        self.icon = icon()
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            icon
+                .animation(.easeInOut(duration: 0.3), value: isFocused)
+
+            if isSecure {
+                SecureField(placeholder, text: $text)
+                    .font(.custom("InclusiveSans-Regular", size: 16))
+                    .foregroundColor(.textDark)
+                    .autocapitalization(.none)
+            } else {
+                TextField(placeholder, text: $text)
+                    .font(.custom("InclusiveSans-Regular", size: 16))
+                    .foregroundColor(.textDark)
+                    .autocapitalization(.none)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+        .background(Color.secondaryBackground)
+        .clipShape(Capsule())
+        .overlay(
+            Capsule()
+                .stroke(isFocused ? Color.linkGreen : Color.clear, lineWidth: 3)
+                .animation(.easeInOut(duration: 0.3), value: isFocused)
+        )
+    }
+}
+
+#Preview {
+    ContentView()
+}

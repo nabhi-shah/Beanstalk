@@ -5,7 +5,13 @@
       "args": ["mcpbridge"]
     },
     "figma": {
-      "serverUrl": "http://localhost:0000/sse"
+      "command": "npx",
+      "args": ["-y", "figma-mcp"],
+      "env": {
+        "FIGMA_ACCESS_TOKEN": "<YOUR_FIGMA_TOKEN_HERE>",
+        "FIGMA_PERSONAL_ACCESS_TOKEN": "<YOUR_FIGMA_TOKEN_HERE>",
+        "FIGMA_API_KEY": "<YOUR_FIGMA_TOKEN_HERE>"
+      }
     }
   }
 }

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "xcode": {
+      "command": "xcrun",
+      "args": ["mcpbridge"]
+    },
+    "figma": {
+      "serverUrl": "http://localhost:0000/sse"
+    }
+  }
+}

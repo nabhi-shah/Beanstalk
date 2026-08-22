@@ -24,7 +24,12 @@ struct OnboardingBottomNav: View {
                         .foregroundColor(.textDark)
                         .frame(maxWidth: .infinity)
                         .frame(height: 48)
-                        .glassEffect(.regular.tint(Color.secondaryBackground.opacity(0.5)).interactive(), in: .capsule)
+                        .background(
+                            ZStack {
+                                Capsule().fill(.ultraThinMaterial).environment(\.colorScheme, .light)
+                                Capsule().fill(Color.secondaryBackground.opacity(0.5))
+                            }
+                        )
                         .rippleEffect(color: Color.textSecondary.opacity(0.3))
                 }
                 .buttonStyle(.plain)
@@ -35,7 +40,12 @@ struct OnboardingBottomNav: View {
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 48)
-                        .glassEffect(.regular.tint(Color.textSecondary.opacity(0.6)).interactive(), in: .capsule)
+                        .background(
+                            ZStack {
+                                Capsule().fill(.ultraThinMaterial).environment(\.colorScheme, .light)
+                                Capsule().fill(Color.textSecondary.opacity(0.6))
+                            }
+                        )
                         .rippleEffect(color: Color.white.opacity(0.3))
                 }
                 .buttonStyle(.plain)

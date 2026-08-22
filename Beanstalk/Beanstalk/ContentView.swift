@@ -1,8 +1,8 @@
 import SwiftUI
-import PhosphorSwift
 
 struct ContentView: View {
     @State private var isLogin = true
+    @State private var name = ""
     @State private var email = ""
     @State private var password = ""
     @FocusState private var focusedField: Field?
@@ -10,6 +10,15 @@ struct ContentView: View {
     enum Field {
         case email
         case password
+    }
+
+    struct BlurTransitionModifier: ViewModifier {
+        let isBlurred: Bool
+        func body(content: Content) -> some View {
+            content
+                .blur(radius: isBlurred ? 10 : 0)
+                .opacity(isBlurred ? 0 : 1)
+        }
     }
 
     var body: some View {
@@ -21,6 +30,9 @@ struct ContentView: View {
                 .frame(height: 36)
                 .padding(.top, 60)
                 .padding(.bottom, 16)
+                .blur(radius: focusedField != nil ? 10.0 : 0.0)
+                .opacity(focusedField != nil ? 0.0 : 1.0)
+                .animation(.easeInOut(duration: 0.3), value: focusedField)
 
             // Tabs
             HStack(spacing: 12) {
@@ -35,7 +47,7 @@ struct ContentView: View {
                     }
                 }
             }
-            .background(GooeyTabBackground(isLogin: isLogin))
+            .background(GooeyTabBackground(isLogin: isLogin).rippleEffect(color: Color.brandGreen.opacity(0.4)))
 
             // Form
             VStack(spacing: 16) {
@@ -45,7 +57,8 @@ struct ContentView: View {
                     text: $email,
                     isFocused: focusedField == .email
                 ) {
-                    Ph.at.regular
+                    Image("phosphor_at")
+                        .renderingMode(.template)
                         .resizable()
                         .scaledToFit()
                         .frame(width: 24, height: 24)
@@ -54,29 +67,42 @@ struct ContentView: View {
                 .focused($focusedField, equals: .email)
 
                 // Password Field
-                InputField(
-                    placeholder: "Password",
-                    text: $password,
-                    isSecure: true,
-                    isFocused: focusedField == .password
-                ) {
-                    Ph.password.regular
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 24, height: 24)
-                        .foregroundColor(focusedField == .password ? .linkGreen : .textSecondary)
+                if isLogin {
+                    InputField(
+                        placeholder: "Password",
+                        text: $password,
+                        isSecure: true,
+                        isFocused: focusedField == .password
+                    ) {
+                        Image("phosphor_lock")
+                            .renderingMode(.template)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 24, height: 24)
+                            .foregroundColor(focusedField == .password ? .linkGreen : .textSecondary)
+                    }
+                    .focused($focusedField, equals: .password)
+                    .transition(AnyTransition.modifier(
+                        active: BlurTransitionModifier(isBlurred: true),
+                        identity: BlurTransitionModifier(isBlurred: false)
+                    ))
                 }
-                .focused($focusedField, equals: .password)
             }
             .padding(.top, 8)
 
             // Forgot Password
-            Button("Forgot Password") {
-                // Action
+            if isLogin {
+                Button("Forgot Password") {
+                    // Action
+                }
+                .font(.custom("InclusiveSans-Regular", size: 15))
+                .foregroundColor(.linkGreen)
+                .padding(.top, 8)
+                .transition(AnyTransition.modifier(
+                    active: BlurTransitionModifier(isBlurred: true),
+                    identity: BlurTransitionModifier(isBlurred: false)
+                ))
             }
-            .font(.custom("InclusiveSans-Regular", size: 15))
-            .foregroundColor(.linkGreen)
-            .padding(.top, 8)
 
             // Submit Button
             Button(action: {
@@ -87,10 +113,12 @@ struct ContentView: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(Color.brandGreen)
+                    .background(Color.brandGreen.rippleEffect(color: Color.white.opacity(0.3)))
                     .clipShape(Capsule())
             }
             .padding(.top, 8)
+
+            // (Social Logins removed as requested)
 
             Spacer()
         }
@@ -122,8 +150,10 @@ struct GooeyTabBackground: View {
                 
                 // Gooey active fluid
                 Canvas { context, size in
+                    #if !targetEnvironment(simulator)
                     context.addFilter(.alphaThreshold(min: 0.5, color: .black))
                     context.addFilter(.blur(radius: 12))
+                    #endif
                     
                     context.drawLayer { ctx in
                         if let resolved = context.resolveSymbol(id: 1) {
@@ -211,6 +241,28 @@ struct TabButton: View {
     }
 }
 
+struct SocialButton<Icon: View>: View {
+    let title: String
+    let icon: Icon
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                icon
+                    .frame(width: 20, height: 20)
+                Text(title)
+                    .font(.custom("InclusiveSans-Regular", size: 16))
+            }
+            .foregroundColor(.textDark)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .background(Color.secondaryBackground.rippleEffect(color: Color.brandGreen.opacity(0.25)))
+            .clipShape(Capsule())
+        }
+    }
+}
+
 struct InputField<Icon: View>: View {
     let placeholder: String
     @Binding var text: String
@@ -251,7 +303,7 @@ struct InputField<Icon: View>: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
-        .background(Color.secondaryBackground)
+        .background(Color.secondaryBackground.rippleEffect(color: Color.brandGreen.opacity(0.25)))
         .clipShape(Capsule())
         .overlay(
             Capsule()

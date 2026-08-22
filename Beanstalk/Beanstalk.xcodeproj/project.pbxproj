@@ -6,10 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		0A6B1A90303356CA00B75816 /* PhosphorSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4767830626AE943EA81BE377 /* PhosphorSwift */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXContainerItemProxy section */
 		0A6B19913033525E00B75816 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -69,7 +65,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0A6B1A90303356CA00B75816 /* PhosphorSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -130,7 +125,6 @@
 			);
 			name = Beanstalk;
 			packageProductDependencies = (
-				4767830626AE943EA81BE377 /* PhosphorSwift */,
 			);
 			productName = Beanstalk;
 			productReference = 0A6B197F3033525D00B75816 /* Beanstalk.app */;
@@ -211,7 +205,6 @@
 			mainGroup = 0A6B19763033525D00B75816;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				D70EF2451541840D87D1A8BE /* XCRemoteSwiftPackageReference "swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0A6B19803033525D00B75816 /* Products */;
@@ -594,25 +587,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		D70EF2451541840D87D1A8BE /* XCRemoteSwiftPackageReference "swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/phosphor-icons/swift.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.0.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		4767830626AE943EA81BE377 /* PhosphorSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D70EF2451541840D87D1A8BE /* XCRemoteSwiftPackageReference "swift" */;
-			productName = PhosphorSwift;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0A6B19773033525D00B75816 /* Project object */;
 }

@@ -13,9 +13,11 @@ struct MainCoordinator: View {
         ZStack {
             if appState == .login {
                 ContentView(appState: $appState, animationNamespace: animationNamespace)
+                    .transition(.opacity)
                     .zIndex(0)
             } else if appState == .onboarding {
                 OnboardingView(appState: $appState, animationNamespace: animationNamespace)
+                    .transition(.identity)
                     .zIndex(1)
             }
         }

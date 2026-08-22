@@ -109,21 +109,22 @@ struct ContentView: View {
             }
 
             // Submit Button
-            Text(isLogin ? "Login" : "Signup")
-                .font(.custom("InclusiveSans-Regular", size: 18))
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(
-                    Color.brandGreen.rippleEffect(color: Color.white.opacity(0.3)) { _ in
-                        if isLogin {
-                            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                                appState = .onboarding
-                            }
-                        }
+            Button {
+                if isLogin {
+                    withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                        appState = .onboarding
                     }
-                )
-                .clipShape(Capsule())
+                }
+            } label: {
+                Text(isLogin ? "Login" : "Signup")
+                    .font(.custom("InclusiveSans-Regular", size: 18))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .glassEffect(.regular.tint(Color.brandGreen.opacity(0.8)).interactive(), in: .capsule)
+                    .rippleEffect(color: Color.white.opacity(0.4))
+            }
+            .buttonStyle(.plain)
             .padding(.top, 8)
 
             // (Social Logins removed as requested)

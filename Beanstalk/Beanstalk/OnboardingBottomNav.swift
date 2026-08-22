@@ -18,31 +18,57 @@ struct OnboardingBottomNav: View {
             
             // Buttons
             HStack(spacing: 8) {
-                Text("Back")
-                    .font(.custom("InclusiveSans-Regular", size: 16))
-                    .foregroundColor(.textDark)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 48)
-                    .background(
-                        Color.secondaryBackground
-                            .rippleEffect(color: Color.textSecondary.opacity(0.2)) { _ in
-                                onBack()
+                Button(action: onBack) {
+                    Text("Back")
+                        .font(.custom("InclusiveSans-Regular", size: 16))
+                        .foregroundColor(.textDark)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 48)
+                        .background(
+                            ZStack {
+                                Capsule()
+                                    .fill(.ultraThinMaterial)
+                                    .environment(\.colorScheme, .light)
+                                Capsule()
+                                    .fill(Color.secondaryBackground.opacity(0.6))
                             }
-                    )
-                    .clipShape(Capsule())
+                        )
+                        .overlay(
+                            Capsule().stroke(
+                                LinearGradient(colors: [Color.white.opacity(0.8), Color.white.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                                lineWidth: 1
+                            )
+                        )
+                        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+                }
+                .buttonStyle(.plain)
                 
-                Text("Next")
-                    .font(.custom("InclusiveSans-Regular", size: 16))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 48)
-                    .background(
-                        Color.textSecondary
-                            .rippleEffect(color: Color.white.opacity(0.3)) { _ in
-                                onNext()
+                Button(action: onNext) {
+                    Text("Next")
+                        .font(.custom("InclusiveSans-Regular", size: 16))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 48)
+                        .background(
+                            ZStack {
+                                Capsule()
+                                    .fill(.ultraThinMaterial)
+                                    .environment(\.colorScheme, .light)
+                                Capsule()
+                                    .fill(
+                                        LinearGradient(colors: [Color.textSecondary.opacity(0.8), Color.textSecondary.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                    )
                             }
-                    )
-                    .clipShape(Capsule())
+                        )
+                        .overlay(
+                            Capsule().stroke(
+                                LinearGradient(colors: [Color.white.opacity(0.8), Color.white.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                                lineWidth: 1
+                            )
+                        )
+                        .shadow(color: Color.textSecondary.opacity(0.3), radius: 10, x: 0, y: 5)
+                }
+                .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, 24)

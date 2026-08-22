@@ -55,8 +55,7 @@ struct ContentView: View {
                 InputField(
                     placeholder: "Email address",
                     text: $email,
-                    isFocused: focusedField == .email,
-                    onTap: { focusedField = .email }
+                    isFocused: focusedField == .email
                 ) {
                     Image("phosphor_at")
                         .renderingMode(.template)
@@ -73,8 +72,7 @@ struct ContentView: View {
                         placeholder: "Password",
                         text: $password,
                         isSecure: true,
-                        isFocused: focusedField == .password,
-                        onTap: { focusedField = .password }
+                        isFocused: focusedField == .password
                     ) {
                         Image("phosphor_lock")
                             .renderingMode(.template)
@@ -270,7 +268,6 @@ struct InputField<Icon: View>: View {
     @Binding var text: String
     var isSecure: Bool = false
     var isFocused: Bool
-    var onTap: (() -> Void)? = nil
     let icon: Icon
 
     init(
@@ -278,14 +275,12 @@ struct InputField<Icon: View>: View {
         text: Binding<String>,
         isSecure: Bool = false,
         isFocused: Bool,
-        onTap: (() -> Void)? = nil,
         @ViewBuilder icon: () -> Icon
     ) {
         self.placeholder = placeholder
         self._text = text
         self.isSecure = isSecure
         self.isFocused = isFocused
-        self.onTap = onTap
         self.icon = icon()
     }
 
@@ -308,14 +303,7 @@ struct InputField<Icon: View>: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
-        .background(
-            Color.secondaryBackground
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    onTap?()
-                }
-        )
-        .rippleEffect(color: Color.brandGreen.opacity(0.25))
+        .background(Color.secondaryBackground)
         .clipShape(Capsule())
         .overlay(
             Capsule()

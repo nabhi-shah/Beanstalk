@@ -11,6 +11,7 @@ struct ProgressiveBlurView: View {
     var body: some View {
         Rectangle()
             .fill(.ultraThinMaterial)
+            .opacity(0.6)
             .mask(
                 LinearGradient(
                     gradient: Gradient(stops: [

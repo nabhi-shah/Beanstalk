@@ -36,7 +36,7 @@ struct ContentView: View {
                 .padding(.bottom, 16)
                 .blur(radius: focusedField != nil ? 10.0 : 0.0)
                 .opacity(focusedField != nil ? 0.0 : 1.0)
-                .animation(.easeInOut(duration: 0.3), value: focusedField)
+                .animation(.spring(response: 0.3, dampingFraction: 1.0), value: focusedField)
 
             // Tabs
             HStack(spacing: 12) {
@@ -139,7 +139,7 @@ struct ContentView: View {
                 }
         )
         .offset(y: focusedField != nil ? -60 : 0)
-        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: focusedField)
+        .animation(.spring(response: 0.3, dampingFraction: 1.0), value: focusedField)
     }
 }
 
@@ -300,7 +300,7 @@ struct InputField<Icon: View>: View {
     var body: some View {
         HStack(spacing: 12) {
             icon
-                .animation(.easeInOut(duration: 0.3), value: isFocused)
+                .animation(.spring(response: 0.3, dampingFraction: 1.0), value: isFocused)
 
             if isSecure {
                 SecureField(placeholder, text: $text)
@@ -321,7 +321,7 @@ struct InputField<Icon: View>: View {
         .overlay(
             Capsule()
                 .stroke(isFocused ? Color.linkGreen : Color.clear, lineWidth: 3)
-                .animation(.easeInOut(duration: 0.3), value: isFocused)
+                .animation(.spring(response: 0.3, dampingFraction: 1.0), value: isFocused)
         )
     }
 }

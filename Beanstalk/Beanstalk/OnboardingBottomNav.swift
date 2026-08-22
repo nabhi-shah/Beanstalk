@@ -18,35 +18,33 @@ struct OnboardingBottomNav: View {
             
             // Buttons
             HStack(spacing: 8) {
-                Button(action: onBack) {
-                    Text("Back")
-                        .font(.custom("InclusiveSans-Regular", size: 16))
-                        .foregroundColor(.textDark)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 48)
-                        .glassEffect(.regular.tint(Color.secondaryBackground.opacity(0.5)), in: .capsule)
-                        .overlay(
-                            Capsule()
-                                .fill(Color.white.opacity(0.01))
-                                .rippleEffect(color: Color.textSecondary.opacity(0.3))
-                        )
-                }
-                .buttonStyle(.plain)
+                Text("Back")
+                    .font(.custom("InclusiveSans-Regular", size: 16))
+                    .foregroundColor(.textDark)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 48)
+                    .glassEffect(.regular.tint(Color.secondaryBackground.opacity(0.5)), in: .capsule)
+                    .overlay(
+                        Capsule()
+                            .fill(Color.white.opacity(0.01))
+                            .rippleEffect(color: Color.textSecondary.opacity(0.3)) { _ in
+                                onBack()
+                            }
+                    )
                 
-                Button(action: onNext) {
-                    Text("Next")
-                        .font(.custom("InclusiveSans-Regular", size: 16))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 48)
-                        .glassEffect(.regular.tint(Color.textSecondary.opacity(0.6)), in: .capsule)
-                        .overlay(
-                            Capsule()
-                                .fill(Color.white.opacity(0.01))
-                                .rippleEffect(color: Color.white.opacity(0.3))
-                        )
-                }
-                .buttonStyle(.plain)
+                Text("Next")
+                    .font(.custom("InclusiveSans-Regular", size: 16))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 48)
+                    .glassEffect(.regular.tint(Color.textSecondary.opacity(0.6)), in: .capsule)
+                    .overlay(
+                        Capsule()
+                            .fill(Color.white.opacity(0.01))
+                            .rippleEffect(color: Color.white.opacity(0.3)) { _ in
+                                onNext()
+                            }
+                    )
             }
         }
         .padding(.horizontal, 24)

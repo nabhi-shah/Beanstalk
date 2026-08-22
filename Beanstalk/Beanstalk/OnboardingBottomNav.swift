@@ -23,56 +23,20 @@ struct OnboardingBottomNav: View {
                     .foregroundColor(.textDark)
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
-                    .background(
-                        ZStack {
-                            Capsule()
-                                .fill(.ultraThinMaterial)
-                                .environment(\.colorScheme, .light)
-                            
-                            Capsule()
-                                .fill(
-                                    LinearGradient(colors: [Color.white.opacity(0.6), Color.white.opacity(0.1)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                                )
-                        }
-                        .rippleEffect(color: Color.textSecondary.opacity(0.2)) { _ in
-                            onBack()
-                        }
-                    )
-                    .overlay(
-                        Capsule().stroke(
-                            LinearGradient(colors: [Color.white.opacity(0.9), Color.white.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing),
-                            lineWidth: 1
-                        )
-                    )
-                    .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 4)
+                    .glassEffect(.regular, in: .capsule)
+                    .rippleEffect(color: Color.textSecondary.opacity(0.2)) { _ in
+                        onBack()
+                    }
                 
                 Text("Next")
                     .font(.custom("InclusiveSans-Regular", size: 16))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
-                    .background(
-                        ZStack {
-                            Capsule()
-                                .fill(.ultraThinMaterial)
-                                .environment(\.colorScheme, .light)
-                                
-                            Capsule()
-                                .fill(
-                                    LinearGradient(colors: [Color.brandGreen.opacity(0.6), Color.brandGreen.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                                )
-                        }
-                        .rippleEffect(color: Color.white.opacity(0.4)) { _ in
-                            onNext()
-                        }
-                    )
-                    .overlay(
-                        Capsule().stroke(
-                            LinearGradient(colors: [Color.white.opacity(0.8), Color.white.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing),
-                            lineWidth: 1
-                        )
-                    )
-                    .shadow(color: Color.brandGreen.opacity(0.15), radius: 8, x: 0, y: 4)
+                    .glassEffect(.regular.tint(Color.brandGreen.opacity(0.4)), in: .capsule)
+                    .rippleEffect(color: Color.white.opacity(0.4)) { _ in
+                        onNext()
+                    }
             }
         }
         .padding(.horizontal, 24)

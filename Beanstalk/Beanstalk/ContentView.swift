@@ -124,6 +124,8 @@ struct ContentView: View {
         }
         .padding(.horizontal, 24)
         .background(Color.appBackground)
+        .offset(y: focusedField != nil ? -60 : 0)
+        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: focusedField)
         .onTapGesture {
             focusedField = nil
         }

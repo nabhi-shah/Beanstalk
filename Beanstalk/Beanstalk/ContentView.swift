@@ -115,7 +115,11 @@ struct ContentView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(
-                    Color.brandGreen.rippleEffect(color: Color.white.opacity(0.3)) { _ in
+                    ZStack {
+                        Capsule().fill(.ultraThinMaterial)
+                        Capsule().fill(Color.brandGreen.opacity(0.4))
+                    }
+                    .rippleEffect(color: Color.white.opacity(0.3)) { _ in
                         if isLogin {
                             withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                                 appState = .onboarding
@@ -123,7 +127,9 @@ struct ContentView: View {
                         }
                     }
                 )
-                .clipShape(Capsule())
+                .overlay(
+                    Capsule().stroke(Color.white.opacity(0.5), lineWidth: 1)
+                )
             .padding(.top, 8)
 
             // (Social Logins removed as requested)

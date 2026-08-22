@@ -26,14 +26,14 @@ using namespace metal;
     float intensityB = exp(-pow((distFromWave + split) / waveWidth, 2.0));
     
     // Shiny specular highlight exactly at the crest
-    float specular = exp(-pow(distFromWave / (waveWidth * 0.15), 2.0)) * 0.8;
+    float specular = exp(-pow(distFromWave / (waveWidth * 0.15), 2.0)) * 0.3;
     
     // Fade out as it expands
     float fade = 1.0 - time;
     
     // The base envelope for the ripple visibility
     float envelope = max(max(intensityR, intensityG), intensityB);
-    float blendAlpha = envelope * fade * rippleColor.a * 2.0; // Boosted alpha
+    float blendAlpha = envelope * fade * rippleColor.a * 1.5; // Reduced alpha boost
     
     // Only apply light to visible pixels to preserve shapes
     if (currentColor.a == 0.0) {

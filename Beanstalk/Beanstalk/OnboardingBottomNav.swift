@@ -24,12 +24,17 @@ struct OnboardingBottomNav: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
                     .background(
-                        Color.secondaryBackground
-                            .rippleEffect(color: Color.textSecondary.opacity(0.2)) { _ in
-                                onBack()
-                            }
+                        ZStack {
+                            Capsule().fill(.ultraThinMaterial)
+                            Capsule().fill(Color.white.opacity(0.3))
+                        }
+                        .rippleEffect(color: Color.textSecondary.opacity(0.2)) { _ in
+                            onBack()
+                        }
                     )
-                    .clipShape(Capsule())
+                    .overlay(
+                        Capsule().stroke(Color.white.opacity(0.6), lineWidth: 1)
+                    )
                 
                 Text("Next")
                     .font(.custom("InclusiveSans-Regular", size: 16))
@@ -37,12 +42,17 @@ struct OnboardingBottomNav: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
                     .background(
-                        Color.textSecondary
-                            .rippleEffect(color: Color.white.opacity(0.3)) { _ in
-                                onNext()
-                            }
+                        ZStack {
+                            Capsule().fill(.ultraThinMaterial)
+                            Capsule().fill(Color.textSecondary.opacity(0.4))
+                        }
+                        .rippleEffect(color: Color.white.opacity(0.3)) { _ in
+                            onNext()
+                        }
                     )
-                    .clipShape(Capsule())
+                    .overlay(
+                        Capsule().stroke(Color.white.opacity(0.4), lineWidth: 1)
+                    )
             }
         }
         .padding(.horizontal, 24)

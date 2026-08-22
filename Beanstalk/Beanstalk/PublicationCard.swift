@@ -27,15 +27,20 @@ struct PublicationCard: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(16)
         .background(
-            Color.secondaryBackground
-                .rippleEffect(color: Color.brandGreen.opacity(0.3)) { _ in
-                    action()
-                }
+            ZStack {
+                RoundedRectangle(cornerRadius: isSelected ? 40 : 32)
+                    .fill(isSelected ? AnyShapeStyle(Color.brandGreen.opacity(0.15)) : AnyShapeStyle(.ultraThinMaterial))
+                
+                RoundedRectangle(cornerRadius: isSelected ? 40 : 32)
+                    .fill(isSelected ? Color.brandGreen.opacity(0.1) : Color.black.opacity(0.02))
+            }
+            .rippleEffect(color: Color.brandGreen.opacity(0.3)) { _ in
+                action()
+            }
         )
-        .clipShape(RoundedRectangle(cornerRadius: isSelected ? 40 : 32))
         .overlay(
             RoundedRectangle(cornerRadius: isSelected ? 40 : 32)
-                .stroke(isSelected ? Color.linkGreen : Color.clear, lineWidth: 3)
+                .stroke(isSelected ? Color.brandGreen : Color.black.opacity(0.1), lineWidth: isSelected ? 2 : 1)
         )
         .animation(.easeOut(duration: 0.25), value: isSelected)
         .frame(height: 169)

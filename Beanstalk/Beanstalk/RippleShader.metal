@@ -53,5 +53,8 @@ using namespace metal;
     // Blend the shiny chromatic ripple over the current color
     half3 newColor = mix(currentColor.rgb, chromaticLight, clamp(blendAlpha, 0.0, 1.0));
     
-    return half4(newColor, currentColor.a);
+    // Increase alpha so the ripple is visible even on transparent backgrounds
+    half newAlpha = clamp(currentColor.a + blendAlpha, 0.0, 1.0);
+    
+    return half4(newColor, newAlpha);
 }

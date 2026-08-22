@@ -122,6 +122,11 @@ struct ContentView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .glassEffect(.regular.tint(Color.brandGreen.opacity(0.8)).interactive(), in: .capsule)
+                    .overlay(
+                        Capsule()
+                            .fill(Color.white.opacity(0.01))
+                            .rippleEffect(color: Color.white.opacity(0.4))
+                    )
             }
             .buttonStyle(.plain)
             .padding(.top, 8)

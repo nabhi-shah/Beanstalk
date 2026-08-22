@@ -121,13 +121,7 @@ struct ContentView: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(
-                        ZStack {
-                            Capsule().fill(.ultraThinMaterial).environment(\.colorScheme, .light)
-                            Capsule().fill(Color.brandGreen.opacity(0.7))
-                        }
-                    )
-                    .rippleEffect(color: Color.white.opacity(0.4))
+                    .glassEffect(.regular.tint(Color.brandGreen.opacity(0.8)).interactive(), in: .capsule)
             }
             .buttonStyle(.plain)
             .padding(.top, 8)

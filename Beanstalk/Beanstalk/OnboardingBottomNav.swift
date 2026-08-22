@@ -23,34 +23,26 @@ struct OnboardingBottomNav: View {
                     .foregroundColor(.textDark)
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
-                    .glassEffect(.regular.interactive(), in: .capsule)
-                    .overlay(
-                        Capsule().stroke(
-                            LinearGradient(colors: [Color.white.opacity(0.9), Color.white.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing),
-                            lineWidth: 1
-                        )
+                    .background(
+                        Color.secondaryBackground
+                            .rippleEffect(color: Color.textSecondary.opacity(0.2)) { _ in
+                                onBack()
+                            }
                     )
-                    .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 4)
-                    .rippleEffect(color: Color.textSecondary.opacity(0.2)) { _ in
-                        onBack()
-                    }
+                    .clipShape(Capsule())
                 
                 Text("Next")
                     .font(.custom("InclusiveSans-Regular", size: 16))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
-                    .glassEffect(.regular.tint(Color.brandGreen.opacity(0.8)).interactive(), in: .capsule)
-                    .overlay(
-                        Capsule().stroke(
-                            LinearGradient(colors: [Color.white.opacity(0.8), Color.white.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing),
-                            lineWidth: 1
-                        )
+                    .background(
+                        Color.textSecondary
+                            .rippleEffect(color: Color.white.opacity(0.3)) { _ in
+                                onNext()
+                            }
                     )
-                    .shadow(color: Color.brandGreen.opacity(0.15), radius: 8, x: 0, y: 4)
-                    .rippleEffect(color: Color.white.opacity(0.4)) { _ in
-                        onNext()
-                    }
+                    .clipShape(Capsule())
             }
         }
         .padding(.horizontal, 24)

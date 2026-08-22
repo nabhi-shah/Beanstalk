@@ -110,8 +110,11 @@ struct ContentView: View {
 
             // Submit Button
             Button(action: {
+                print("Login button tapped, isLogin: \(isLogin)")
                 if isLogin {
-                    appState = .onboarding
+                    withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                        appState = .onboarding
+                    }
                 }
             }) {
                 Text(isLogin ? "Login" : "Signup")
@@ -129,12 +132,15 @@ struct ContentView: View {
             Spacer()
         }
         .padding(.horizontal, 24)
-        .background(Color.appBackground)
+        .background(
+            Color.appBackground
+                .ignoresSafeArea()
+                .onTapGesture {
+                    focusedField = nil
+                }
+        )
         .offset(y: focusedField != nil ? -60 : 0)
         .animation(.spring(response: 0.5, dampingFraction: 0.8), value: focusedField)
-        .onTapGesture {
-            focusedField = nil
-        }
     }
 }
 

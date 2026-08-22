@@ -39,19 +39,31 @@ struct ContentView: View {
                 .animation(.easeInOut(duration: 0.3), value: focusedField)
 
             // Tabs
-            HStack(spacing: 12) {
-                TabButton(title: "Login", isActive: isLogin) {
-                    withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
-                        isLogin = true
-                    }
+            GeometryReader { proxy in
+                HStack(spacing: 12) {
+                    Text("Login")
+                        .font(.custom("InclusiveSans-Regular", size: 16))
+                        .foregroundColor(isLogin ? .white : .textDark)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        
+                    Text("Signup")
+                        .font(.custom("InclusiveSans-Regular", size: 16))
+                        .foregroundColor(!isLogin ? .white : .textDark)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
                 }
-                TabButton(title: "Signup", isActive: !isLogin) {
-                    withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
-                        isLogin = false
-                    }
-                }
+                .background(
+                    GooeyTabBackground(isLogin: isLogin)
+                        .rippleEffect(color: Color.brandGreen.opacity(0.4)) { location in
+                            let isLeft = location.x < proxy.size.width / 2
+                            withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
+                                isLogin = isLeft
+                            }
+                        }
+                )
             }
-            .background(GooeyTabBackground(isLogin: isLogin).rippleEffect(color: Color.brandGreen.opacity(0.4)))
+            .frame(height: 48) // Fixed height to prevent GeometryReader from collapsing
 
             // Form
             VStack(spacing: 16) {
@@ -109,21 +121,21 @@ struct ContentView: View {
             }
 
             // Submit Button
-            Button(action: {
-                if isLogin {
-                    withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                        appState = .onboarding
+            Text(isLogin ? "Login" : "Signup")
+                .font(.custom("InclusiveSans-Regular", size: 18))
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(
+                    Color.brandGreen.rippleEffect(color: Color.white.opacity(0.3)) { _ in
+                        if isLogin {
+                            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                appState = .onboarding
+                            }
+                        }
                     }
-                }
-            }) {
-                Text(isLogin ? "Login" : "Signup")
-                    .font(.custom("InclusiveSans-Regular", size: 18))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(Color.brandGreen)
-                    .clipShape(Capsule())
-            }
+                )
+                .clipShape(Capsule())
             .padding(.top, 8)
 
             // (Social Logins removed as requested)

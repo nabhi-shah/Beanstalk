@@ -2,6 +2,8 @@ import SwiftUI
 
 struct RippleModifier: ViewModifier {
     var rippleColor: Color = .white
+    var action: ((CGPoint) -> Void)? = nil
+    
     @State private var touchLocation: CGPoint = .zero
     @State private var progress: CGFloat = 1.0
     @State private var isTouching: Bool = false
@@ -9,7 +11,6 @@ struct RippleModifier: ViewModifier {
     
     func body(content: Content) -> some View {
         content
-            // Disable default dimming on press so the ripple stands out
             .buttonStyle(PlainButtonStyle())
             .visualEffect { viewContent, geometryProxy in
                 viewContent.colorEffect(
@@ -21,7 +22,7 @@ struct RippleModifier: ViewModifier {
                     )
                 )
             }
-            .simultaneousGesture(
+            .gesture(
                 DragGesture(minimumDistance: 0)
                     .updating($isPressing) { _, state, _ in
                         state = true
@@ -32,14 +33,14 @@ struct RippleModifier: ViewModifier {
                             touchLocation = value.location
                             progress = 0.0
                             
-                            // Slow ripple effect as requested
                             withAnimation(.easeOut(duration: 1.5)) {
                                 progress = 1.0
                             }
                         }
                     }
-                    .onEnded { _ in
+                    .onEnded { value in
                         isTouching = false
+                        action?(value.location)
                     }
             )
             .onChange(of: isPressing) { oldValue, newValue in
@@ -52,7 +53,7 @@ struct RippleModifier: ViewModifier {
 
 extension View {
     /// Applies a light ripple effect on touch.
-    func rippleEffect(color: Color = .white) -> some View {
-        self.modifier(RippleModifier(rippleColor: color))
+    func rippleEffect(color: Color = .white, action: ((CGPoint) -> Void)? = nil) -> some View {
+        self.modifier(RippleModifier(rippleColor: color, action: action))
     }
 }

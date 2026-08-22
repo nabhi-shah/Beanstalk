@@ -28,7 +28,9 @@ struct PublicationCard: View {
         .padding(16)
         .background(
             Color.secondaryBackground
-                .rippleEffect(color: Color.brandGreen.opacity(0.3))
+                .rippleEffect(color: Color.brandGreen.opacity(0.3)) { _ in
+                    action()
+                }
         )
         .clipShape(RoundedRectangle(cornerRadius: isSelected ? 40 : 32))
         .overlay(
@@ -36,10 +38,6 @@ struct PublicationCard: View {
                 .stroke(isSelected ? Color.linkGreen : Color.clear, lineWidth: 3)
         )
         .animation(.easeOut(duration: 0.25), value: isSelected)
-        .contentShape(RoundedRectangle(cornerRadius: isSelected ? 40 : 32))
-        .onTapGesture {
-            action()
-        }
         .frame(height: 169)
     }
 }

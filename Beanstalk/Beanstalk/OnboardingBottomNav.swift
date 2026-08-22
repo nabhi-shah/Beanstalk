@@ -18,33 +18,32 @@ struct OnboardingBottomNav: View {
             
             // Buttons
             HStack(spacing: 8) {
-                Button(action: onBack) {
-                    Text("Back")
-                        .font(.custom("InclusiveSans-Regular", size: 16))
-                        .foregroundColor(.textDark)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 48)
-                        .background(
-                            Color.secondaryBackground
-                                .rippleEffect(color: Color.textSecondary.opacity(0.2))
-                        )
-                        .clipShape(Capsule())
-                }
+                Text("Back")
+                    .font(.custom("InclusiveSans-Regular", size: 16))
+                    .foregroundColor(.textDark)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 48)
+                    .background(
+                        Color.secondaryBackground
+                            .rippleEffect(color: Color.textSecondary.opacity(0.2)) { _ in
+                                onBack()
+                            }
+                    )
+                    .clipShape(Capsule())
                 
-                Button(action: onNext) {
-                    Text("Next")
-                        .font(.custom("InclusiveSans-Regular", size: 16))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 48)
-                        .background(
-                            Color.textSecondary
-                                .rippleEffect(color: Color.white.opacity(0.3))
-                        )
-                        .clipShape(Capsule())
-                }
+                Text("Next")
+                    .font(.custom("InclusiveSans-Regular", size: 16))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 48)
+                    .background(
+                        Color.textSecondary
+                            .rippleEffect(color: Color.white.opacity(0.3)) { _ in
+                                onNext()
+                            }
+                    )
+                    .clipShape(Capsule())
             }
-            .buttonStyle(PlainButtonStyle())
         }
         .padding(.horizontal, 24)
         .padding(.bottom, 34) // Account for home indicator

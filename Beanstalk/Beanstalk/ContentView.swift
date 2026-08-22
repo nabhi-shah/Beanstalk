@@ -121,7 +121,7 @@ struct ContentView: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .glassEffect(.regular.tint(Color.brandGreen.opacity(0.8)).interactive(), in: .capsule)
+                    .glassEffect(.regular.tint(Color.brandGreen.opacity(0.8)), in: .capsule)
                     .overlay(
                         Capsule()
                             .fill(Color.white.opacity(0.01))

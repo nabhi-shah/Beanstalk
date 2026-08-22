@@ -20,20 +20,20 @@ using namespace metal;
     float distFromWave = distance - waveRadius;
     
     // Chromatic aberration split (offsetting the wave crest for R, G, B)
-    float split = 8.0; 
+    float split = 3.0; 
     float intensityR = exp(-pow((distFromWave - split) / waveWidth, 2.0));
     float intensityG = exp(-pow(distFromWave / waveWidth, 2.0));
     float intensityB = exp(-pow((distFromWave + split) / waveWidth, 2.0));
     
-    // Shiny specular highlight exactly at the crest
-    float specular = exp(-pow(distFromWave / (waveWidth * 0.15), 2.0)) * 0.3;
+    // Subtle specular highlight exactly at the crest
+    float specular = exp(-pow(distFromWave / (waveWidth * 0.15), 2.0)) * 0.15;
     
     // Fade out as it expands
     float fade = 1.0 - time;
     
     // The base envelope for the ripple visibility
     float envelope = max(max(intensityR, intensityG), intensityB);
-    float blendAlpha = envelope * fade * rippleColor.a * 1.5; // Reduced alpha boost
+    float blendAlpha = envelope * fade * rippleColor.a * 0.8; // Very subtle alpha boost
     
     // Only apply light to visible pixels to preserve shapes
     if (currentColor.a == 0.0) {

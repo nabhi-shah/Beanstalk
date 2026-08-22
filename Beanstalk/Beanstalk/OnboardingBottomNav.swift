@@ -24,7 +24,7 @@ struct OnboardingBottomNav: View {
                         .foregroundColor(.textDark)
                         .frame(maxWidth: .infinity)
                         .frame(height: 48)
-                        .glassEffect(.regular.tint(Color.secondaryBackground.opacity(0.5)).interactive(), in: .capsule)
+                        .glassEffect(.regular.tint(Color.secondaryBackground.opacity(0.5)), in: .capsule)
                         .overlay(
                             Capsule()
                                 .fill(Color.white.opacity(0.01))
@@ -39,7 +39,7 @@ struct OnboardingBottomNav: View {
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 48)
-                        .glassEffect(.regular.tint(Color.textSecondary.opacity(0.6)).interactive(), in: .capsule)
+                        .glassEffect(.regular.tint(Color.textSecondary.opacity(0.6)), in: .capsule)
                         .overlay(
                             Capsule()
                                 .fill(Color.white.opacity(0.01))

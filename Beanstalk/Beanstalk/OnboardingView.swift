@@ -93,6 +93,7 @@ struct OnboardingView: View {
                     .ignoresSafeArea(edges: .bottom)
                 }
             }
+            .transition(.move(edge: .bottom))
             .ignoresSafeArea(edges: .bottom)
         }
     }

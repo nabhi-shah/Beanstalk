@@ -18,18 +18,21 @@ struct OnboardingView: View {
     
     var body: some View {
         ZStack(alignment: .top) {
-            Color.appBackground.ignoresSafeArea()
-            
-            // Logo that animates in
-            Image("BeanstalkLogo")
-                .renderingMode(.original)
-                .resizable()
-                .scaledToFit()
-                .frame(height: 36)
-                .matchedGeometryEffect(id: "logo", in: animationNamespace)
-                .padding(.top, 60)
-            
-            // Bottom Sheet
+            if appState == .onboarding {
+                Color.appBackground.ignoresSafeArea()
+                    .transition(.opacity)
+                
+                // Logo that animates in
+                Image("BeanstalkLogo")
+                    .renderingMode(.original)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 36)
+                    .matchedGeometryEffect(id: "logo", in: animationNamespace)
+                    .padding(.top, 60)
+                    .transition(.identity)
+                
+                // Bottom Sheet
             VStack(spacing: 0) {
                 Spacer().frame(height: 140) // Space for logo
                 
@@ -95,6 +98,7 @@ struct OnboardingView: View {
             }
             .transition(.move(edge: .bottom))
             .ignoresSafeArea(edges: .bottom)
+            }
         }
     }
     

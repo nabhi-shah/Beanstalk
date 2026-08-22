@@ -15,11 +15,11 @@ struct MainCoordinator: View {
                 ContentView(appState: $appState, animationNamespace: animationNamespace)
                     .transition(.opacity)
                     .zIndex(0)
-            } else if appState == .onboarding {
-                OnboardingView(appState: $appState, animationNamespace: animationNamespace)
-                    .transition(.identity)
-                    .zIndex(1)
             }
+            
+            OnboardingView(appState: $appState, animationNamespace: animationNamespace)
+                .zIndex(1)
+                .allowsHitTesting(appState == .onboarding)
         }
         .animation(.spring(response: 0.7, dampingFraction: 0.8), value: appState)
     }

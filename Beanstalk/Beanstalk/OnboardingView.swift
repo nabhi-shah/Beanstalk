@@ -1,0 +1,122 @@
+import SwiftUI
+
+struct OnboardingView: View {
+    @Binding var appState: AppState
+    var animationNamespace: Namespace.ID
+    
+    @State private var selectedPublications: Set<String> = []
+    
+    let publications = [
+        "Financial Times", "Wall Street Journal", "Morning Brew", "NY Times",
+        "CNBC", "Barron’s", "The Economist", "The Washington Post"
+    ]
+    
+    let columns = [
+        GridItem(.flexible(), spacing: 10),
+        GridItem(.flexible(), spacing: 10)
+    ]
+    
+    var body: some View {
+        ZStack(alignment: .top) {
+            Color.appBackground.ignoresSafeArea()
+            
+            // Logo that animates in
+            Image("BeanstalkLogo")
+                .renderingMode(.original)
+                .resizable()
+                .scaledToFit()
+                .frame(height: 36)
+                .matchedGeometryEffect(id: "logo", in: animationNamespace)
+                .padding(.top, 60)
+            
+            // Bottom Sheet
+            VStack(spacing: 0) {
+                Spacer().frame(height: 140) // Space for logo
+                
+                ZStack(alignment: .top) {
+                    Color.white
+                        .cornerRadius(48, corners: [.topLeft, .topRight])
+                        .ignoresSafeArea(edges: .bottom)
+                    
+                    ScrollView {
+                        VStack(spacing: 24) {
+                            Spacer().frame(height: 100) // Space for sticky header
+                            
+                            LazyVGrid(columns: columns, spacing: 10) {
+                                ForEach(publications, id: \.self) { pub in
+                                    PublicationCard(
+                                        title: pub,
+                                        isSelected: selectedPublications.contains(pub)
+                                    ) {
+                                        toggleSelection(for: pub)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 24)
+                            .padding(.bottom, 160) // Space for bottom nav
+                        }
+                    }
+                    
+                    // Sticky Header with Progressive Blur
+                    ZStack(alignment: .top) {
+                        ProgressiveBlurView(height: 140)
+                            .cornerRadius(48, corners: [.topLeft, .topRight])
+                        
+                        VStack(spacing: 4) {
+                            Text("What would you like to follow?")
+                                .font(.custom("InclusiveSans-Regular", size: 20))
+                                .foregroundColor(.textDark)
+                            
+                            Text("Select up to three")
+                                .font(.custom("InclusiveSans-Regular", size: 16))
+                                .foregroundColor(.textSecondary)
+                        }
+                        .padding(.top, 40)
+                    }
+                    
+                    // Bottom Nav
+                    VStack {
+                        Spacer()
+                        OnboardingBottomNav(
+                            onBack: {
+                                appState = .login
+                            },
+                            onNext: {
+                                // Next action
+                            }
+                        )
+                    }
+                    .ignoresSafeArea(edges: .bottom)
+                }
+            }
+            .ignoresSafeArea(edges: .bottom)
+        }
+    }
+    
+    private func toggleSelection(for pub: String) {
+        if selectedPublications.contains(pub) {
+            selectedPublications.remove(pub)
+        } else {
+            if selectedPublications.count < 3 {
+                selectedPublications.insert(pub)
+            }
+        }
+    }
+}
+
+// Extension to apply corner radius to specific corners
+extension View {
+    func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
+        clipShape(RoundedCorner(radius: radius, corners: corners))
+    }
+}
+
+struct RoundedCorner: Shape {
+    var radius: CGFloat = .infinity
+    var corners: UIRectCorner = .allCorners
+
+    func path(in rect: CGRect) -> Path {
+        let path = UIBezierPath(roundedRect: rect, byRoundingCorners: corners, cornerRadii: CGSize(width: radius, height: radius))
+        return Path(path.cgPath)
+    }
+}

@@ -1,6 +1,9 @@
 import SwiftUI
 
 struct ContentView: View {
+    @Binding var appState: AppState
+    var animationNamespace: Namespace.ID
+
     @State private var isLogin = true
     @State private var name = ""
     @State private var email = ""
@@ -28,6 +31,7 @@ struct ContentView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(height: 36)
+                .matchedGeometryEffect(id: "logo", in: animationNamespace)
                 .padding(.top, 60)
                 .padding(.bottom, 16)
                 .blur(radius: focusedField != nil ? 10.0 : 0.0)
@@ -106,7 +110,9 @@ struct ContentView: View {
 
             // Submit Button
             Button(action: {
-                // Action
+                if isLogin {
+                    appState = .onboarding
+                }
             }) {
                 Text(isLogin ? "Login" : "Signup")
                     .font(.custom("InclusiveSans-Regular", size: 18))
@@ -316,5 +322,6 @@ struct InputField<Icon: View>: View {
 }
 
 #Preview {
-    ContentView()
+    @Previewable @Namespace var namespace
+    ContentView(appState: .constant(.login), animationNamespace: namespace)
 }

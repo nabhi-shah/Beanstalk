@@ -12,7 +12,7 @@ import SwiftData
 struct BeanstalkApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainCoordinator()
         }
     }
 }

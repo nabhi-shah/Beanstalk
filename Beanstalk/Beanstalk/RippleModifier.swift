@@ -22,7 +22,7 @@ struct RippleModifier: ViewModifier {
                     )
                 )
             }
-            .gesture(
+            .simultaneousGesture(
                 DragGesture(minimumDistance: 0)
                     .updating($isPressing) { _, state, _ in
                         state = true
@@ -40,7 +40,11 @@ struct RippleModifier: ViewModifier {
                     }
                     .onEnded { value in
                         isTouching = false
-                        action?(value.location)
+                        // Only trigger action if it was a tap, not a scroll
+                        let distance = sqrt(pow(value.translation.width, 2) + pow(value.translation.height, 2))
+                        if distance < 10 {
+                            action?(value.location)
+                        }
                     }
             )
             .onChange(of: isPressing) { oldValue, newValue in

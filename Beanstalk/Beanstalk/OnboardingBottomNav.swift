@@ -25,16 +25,26 @@ struct OnboardingBottomNav: View {
                     .frame(height: 48)
                     .background(
                         ZStack {
-                            Capsule().fill(.ultraThinMaterial)
-                            Capsule().fill(Color.white.opacity(0.3))
+                            Capsule()
+                                .fill(.ultraThinMaterial)
+                                .environment(\.colorScheme, .light)
+                            
+                            Capsule()
+                                .fill(
+                                    LinearGradient(colors: [Color.white.opacity(0.6), Color.white.opacity(0.1)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                )
                         }
                         .rippleEffect(color: Color.textSecondary.opacity(0.2)) { _ in
                             onBack()
                         }
                     )
                     .overlay(
-                        Capsule().stroke(Color.white.opacity(0.6), lineWidth: 1)
+                        Capsule().stroke(
+                            LinearGradient(colors: [Color.white.opacity(0.9), Color.white.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                            lineWidth: 1
+                        )
                     )
+                    .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 4)
                 
                 Text("Next")
                     .font(.custom("InclusiveSans-Regular", size: 16))
@@ -43,16 +53,26 @@ struct OnboardingBottomNav: View {
                     .frame(height: 48)
                     .background(
                         ZStack {
-                            Capsule().fill(.ultraThinMaterial)
-                            Capsule().fill(Color.textSecondary.opacity(0.4))
+                            Capsule()
+                                .fill(.ultraThinMaterial)
+                                .environment(\.colorScheme, .light)
+                                
+                            Capsule()
+                                .fill(
+                                    LinearGradient(colors: [Color.brandGreen.opacity(0.6), Color.brandGreen.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                )
                         }
-                        .rippleEffect(color: Color.white.opacity(0.3)) { _ in
+                        .rippleEffect(color: Color.white.opacity(0.4)) { _ in
                             onNext()
                         }
                     )
                     .overlay(
-                        Capsule().stroke(Color.white.opacity(0.4), lineWidth: 1)
+                        Capsule().stroke(
+                            LinearGradient(colors: [Color.white.opacity(0.8), Color.white.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                            lineWidth: 1
+                        )
                     )
+                    .shadow(color: Color.brandGreen.opacity(0.15), radius: 8, x: 0, y: 4)
             }
         }
         .padding(.horizontal, 24)

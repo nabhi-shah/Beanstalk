@@ -29,10 +29,17 @@ struct PublicationCard: View {
         .background(
             ZStack {
                 RoundedRectangle(cornerRadius: isSelected ? 40 : 32)
-                    .fill(isSelected ? AnyShapeStyle(Color.brandGreen.opacity(0.15)) : AnyShapeStyle(.ultraThinMaterial))
+                    .fill(.ultraThinMaterial)
+                    .environment(\.colorScheme, .light)
                 
                 RoundedRectangle(cornerRadius: isSelected ? 40 : 32)
-                    .fill(isSelected ? Color.brandGreen.opacity(0.1) : Color.black.opacity(0.02))
+                    .fill(
+                        LinearGradient(
+                            colors: isSelected ? [Color.brandGreen.opacity(0.4), Color.brandGreen.opacity(0.1)] : [Color.white.opacity(0.6), Color.white.opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
             }
             .rippleEffect(color: Color.brandGreen.opacity(0.3)) { _ in
                 action()
@@ -40,8 +47,16 @@ struct PublicationCard: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: isSelected ? 40 : 32)
-                .stroke(isSelected ? Color.brandGreen : Color.black.opacity(0.1), lineWidth: isSelected ? 2 : 1)
+                .stroke(
+                    LinearGradient(
+                        colors: isSelected ? [Color.brandGreen.opacity(0.8), Color.brandGreen.opacity(0.2)] : [Color.white.opacity(0.8), Color.white.opacity(0.2)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: isSelected ? 2 : 1
+                )
         )
+        .shadow(color: isSelected ? Color.brandGreen.opacity(0.15) : Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
         .animation(.easeOut(duration: 0.25), value: isSelected)
         .frame(height: 169)
     }

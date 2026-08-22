@@ -47,6 +47,5 @@ struct OnboardingBottomNav: View {
         }
         .padding(.horizontal, 24)
         .padding(.bottom, 34) // Account for home indicator
-        .background(Color.appBackground)
     }
 }

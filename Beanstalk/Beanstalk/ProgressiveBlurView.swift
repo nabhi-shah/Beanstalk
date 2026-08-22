@@ -1,7 +1,12 @@
 import SwiftUI
 
+enum BlurEdge {
+    case top, bottom
+}
+
 struct ProgressiveBlurView: View {
     var height: CGFloat = 100
+    var edge: BlurEdge = .top
     
     var body: some View {
         Rectangle()
@@ -13,8 +18,8 @@ struct ProgressiveBlurView: View {
                         .init(color: .black, location: 0.6),
                         .init(color: .clear, location: 1.0)
                     ]),
-                    startPoint: .top,
-                    endPoint: .bottom
+                    startPoint: edge == .top ? .top : .bottom,
+                    endPoint: edge == .top ? .bottom : .top
                 )
             )
             .frame(height: height)

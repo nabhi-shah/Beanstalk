@@ -59,7 +59,7 @@ struct OnboardingView: View {
                     
                     // Sticky Header with Progressive Blur
                     ZStack(alignment: .top) {
-                        ProgressiveBlurView(height: 140)
+                        ProgressiveBlurView(height: 140, edge: .top)
                             .cornerRadius(48, corners: [.topLeft, .topRight])
                         
                         VStack(spacing: 4) {
@@ -77,18 +77,23 @@ struct OnboardingView: View {
                     // Bottom Nav
                     VStack {
                         Spacer()
-                        OnboardingBottomNav(
-                            onBack: {
-                                appState = .login
-                            },
-                            onNext: {
-                                // Next action
-                            }
-                        )
+                        ZStack(alignment: .bottom) {
+                            ProgressiveBlurView(height: 140, edge: .bottom)
+                            
+                            OnboardingBottomNav(
+                                onBack: {
+                                    appState = .login
+                                },
+                                onNext: {
+                                    // Next action
+                                }
+                            )
+                        }
                     }
                     .ignoresSafeArea(edges: .bottom)
                 }
             }
+            .transition(.move(edge: .bottom))
             .ignoresSafeArea(edges: .bottom)
         }
     }

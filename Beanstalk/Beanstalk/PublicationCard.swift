@@ -27,9 +27,21 @@ struct PublicationCard: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(16)
         .glassEffect(
-            isSelected ? .regular.tint(Color.brandGreen.opacity(0.2)) : .regular,
+            isSelected ? .regular.tint(Color.brandGreen.opacity(0.4)).interactive() : .regular.interactive(),
             in: .rect(cornerRadius: isSelected ? 40 : 32)
         )
+        .overlay(
+            RoundedRectangle(cornerRadius: isSelected ? 40 : 32)
+                .stroke(
+                    LinearGradient(
+                        colors: isSelected ? [Color.brandGreen.opacity(0.8), Color.brandGreen.opacity(0.2)] : [Color.black.opacity(0.1), Color.clear],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: isSelected ? 2 : 1
+                )
+        )
+        .shadow(color: isSelected ? Color.brandGreen.opacity(0.15) : Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
         .rippleEffect(color: Color.brandGreen.opacity(0.3)) { _ in
             action()
         }

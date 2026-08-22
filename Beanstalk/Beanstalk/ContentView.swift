@@ -114,7 +114,14 @@ struct ContentView: View {
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .glassEffect(.regular.tint(Color.brandGreen.opacity(0.4)), in: .capsule)
+                .glassEffect(.regular.tint(Color.brandGreen.opacity(0.8)).interactive(), in: .capsule)
+                .overlay(
+                    Capsule().stroke(
+                        LinearGradient(colors: [Color.white.opacity(0.8), Color.white.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                        lineWidth: 1
+                    )
+                )
+                .shadow(color: Color.brandGreen.opacity(0.3), radius: 10, x: 0, y: 5)
                 .rippleEffect(color: Color.white.opacity(0.4)) { _ in
                     if isLogin {
                         withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {

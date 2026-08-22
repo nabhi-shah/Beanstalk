@@ -164,7 +164,7 @@ struct GooeyTabBackground: View {
             let tabWidth = (proxy.size.width - spacing) / 2
             let tabHeight = proxy.size.height
             
-            ZStack {
+            ZStack(alignment: .leading) {
                 // Inactive backgrounds
                 HStack(spacing: spacing) {
                     Capsule().fill(Color.secondaryBackground)
@@ -173,46 +173,41 @@ struct GooeyTabBackground: View {
                         .frame(width: tabWidth)
                 }
                 
-                // Gooey active fluid
-                Canvas { context, size in
-                    #if !targetEnvironment(simulator)
-                    context.addFilter(.alphaThreshold(min: 0.5, color: .black))
-                    context.addFilter(.blur(radius: 12))
-                    #endif
-                    
-                    context.drawLayer { ctx in
-                        if let resolved = context.resolveSymbol(id: 1) {
-                            ctx.draw(resolved, at: CGPoint(x: size.width / 2, y: size.height / 2))
+                // Gooey active fluid mask
+                Color.textDark
+                    .mask(
+                        ZStack(alignment: .topLeading) {
+                            Color.black // Black becomes transparent
+                            
+                            // Anchor 1 (Login)
+                            Capsule()
+                                .fill(Color.white) // White becomes opaque
+                                .frame(width: tabWidth, height: tabHeight)
+                                .offset(x: 0)
+                            
+                            // Anchor 2 (Signup)
+                            Capsule()
+                                .fill(Color.white)
+                                .frame(width: tabWidth, height: tabHeight)
+                                .offset(x: tabWidth + spacing)
+                            
+                            // The traveling fluid bridge
+                            Color.clear
+                                .modifier(FluidBridgeModifier(
+                                    progress: isLogin ? 0 : 1,
+                                    tabWidth: tabWidth,
+                                    tabHeight: tabHeight,
+                                    spacing: spacing,
+                                    color: .white
+                                ))
                         }
-                    }
-                } symbols: {
-                    ZStack(alignment: .topLeading) {
-                        // Anchor 1 (Login)
-                        Capsule()
-                            .fill(Color.black)
-                            .frame(width: isLogin ? tabWidth : 0, height: isLogin ? tabHeight : 0)
-                            .position(x: tabWidth / 2, y: tabHeight / 2)
-                        
-                        // Anchor 2 (Signup)
-                        Capsule()
-                            .fill(Color.black)
-                            .frame(width: !isLogin ? tabWidth : 0, height: !isLogin ? tabHeight : 0)
-                            .position(x: tabWidth + spacing + tabWidth / 2, y: tabHeight / 2)
-                        
-                        // The traveling fluid bridge
-                        Color.clear
-                            .modifier(FluidBridgeModifier(
-                                progress: isLogin ? 0 : 1,
-                                tabWidth: tabWidth,
-                                tabHeight: tabHeight,
-                                spacing: spacing
-                            ))
-                    }
-                    .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
-                    .tag(1)
-                }
-                .padding(-30) // Adds invisible breathing room so the spring bounce & blur aren't cropped
-                .colorMultiply(Color.textDark)
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                        .padding(-20) // Give room for blur bleed
+                        .blur(radius: 8)
+                        .contrast(20)
+                        .luminanceToAlpha()
+                        .padding(20) // Restore exact alignment
+                    )
             }
         }
     }
@@ -223,6 +218,7 @@ struct FluidBridgeModifier: ViewModifier, Animatable {
     var tabWidth: CGFloat
     var tabHeight: CGFloat
     var spacing: CGFloat
+    var color: Color
     
     var animatableData: CGFloat {
         get { progress }
@@ -243,7 +239,7 @@ struct FluidBridgeModifier: ViewModifier, Animatable {
         let currentCenterX = startCenterX + progress * (endCenterX - startCenterX)
         
         return Capsule()
-            .fill(Color.black)
+            .fill(color)
             .frame(width: currentWidth, height: currentHeight)
             .position(x: currentCenterX, y: tabHeight / 2)
     }

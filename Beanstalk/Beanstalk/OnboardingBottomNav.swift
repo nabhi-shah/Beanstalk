@@ -24,22 +24,7 @@ struct OnboardingBottomNav: View {
                         .foregroundColor(.textDark)
                         .frame(maxWidth: .infinity)
                         .frame(height: 48)
-                        .background(
-                            ZStack {
-                                Capsule()
-                                    .fill(.ultraThinMaterial)
-                                    .environment(\.colorScheme, .light)
-                                Capsule()
-                                    .fill(Color.secondaryBackground.opacity(0.6))
-                            }
-                        )
-                        .overlay(
-                            Capsule().stroke(
-                                LinearGradient(colors: [Color.white.opacity(0.8), Color.white.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing),
-                                lineWidth: 1
-                            )
-                        )
-                        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+                        .glassEffect(.regular.tint(Color.secondaryBackground).interactive(), in: .capsule)
                 }
                 .buttonStyle(.plain)
                 
@@ -49,24 +34,7 @@ struct OnboardingBottomNav: View {
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 48)
-                        .background(
-                            ZStack {
-                                Capsule()
-                                    .fill(.ultraThinMaterial)
-                                    .environment(\.colorScheme, .light)
-                                Capsule()
-                                    .fill(
-                                        LinearGradient(colors: [Color.textSecondary.opacity(0.8), Color.textSecondary.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                                    )
-                            }
-                        )
-                        .overlay(
-                            Capsule().stroke(
-                                LinearGradient(colors: [Color.white.opacity(0.8), Color.white.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing),
-                                lineWidth: 1
-                            )
-                        )
-                        .shadow(color: Color.textSecondary.opacity(0.3), radius: 10, x: 0, y: 5)
+                        .glassEffect(.regular.tint(Color.textSecondary).interactive(), in: .capsule)
                 }
                 .buttonStyle(.plain)
             }

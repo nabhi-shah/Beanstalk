@@ -308,7 +308,13 @@ struct InputField<Icon: View>: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
-        .background(Color.secondaryBackground)
+        .background(
+            Color.secondaryBackground
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    onTap?()
+                }
+        )
         .rippleEffect(color: Color.brandGreen.opacity(0.25))
         .clipShape(Capsule())
         .overlay(
@@ -316,10 +322,6 @@ struct InputField<Icon: View>: View {
                 .stroke(isFocused ? Color.linkGreen : Color.clear, lineWidth: 3)
                 .animation(.easeInOut(duration: 0.3), value: isFocused)
         )
-        .contentShape(Capsule())
-        .onTapGesture {
-            onTap?()
-        }
     }
 }
 

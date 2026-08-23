@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "The Washington Post.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

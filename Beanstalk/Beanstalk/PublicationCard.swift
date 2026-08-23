@@ -7,15 +7,11 @@ struct PublicationCard: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 12) {
-                // Placeholder for Logo
-                Circle()
-                    .fill(Color.appBackground) 
+                Image(title)
+                    .resizable()
+                    .scaledToFit()
                     .frame(width: 64, height: 64)
-                    .overlay(
-                        Image(systemName: "newspaper.fill")
-                            .foregroundColor(.textSecondary)
-                            .font(.system(size: 24))
-                    )
+                    .clipShape(Circle())
                 
                 Text(title)
                     .font(.custom("InclusiveSans-Regular", size: 16))

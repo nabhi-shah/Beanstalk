@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct OnboardingBottomNav: View {
+    var isNextEnabled: Bool
     let onBack: () -> Void
     let onNext: () -> Void
     
@@ -27,25 +28,26 @@ struct OnboardingBottomNav: View {
                         .background(Color.white.opacity(0.01))
                         .clipShape(Capsule())
                 }
-                .buttonStyle(RippleButtonStyle(rippleColor: Color.textSecondary.opacity(0.3)))
+                .buttonStyle(RippleButtonStyle(rippleColor: Color.textSecondary.opacity(0.2)))
                 .background(
                     Capsule()
-                        .glassEffect(.regular.tint(Color.secondaryBackground.opacity(0.5)), in: .capsule)
+                        .glassEffect(.regular.tint(Color.secondaryBackground.opacity(0)), in: .capsule)
                 )
                 
                 Button(action: onNext) {
                     Text("Next")
                         .font(.custom("InclusiveSans-Regular", size: 16))
-                        .foregroundColor(.white)
+                        .foregroundColor(isNextEnabled ? .white : .textSecondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 48)
                         .background(Color.white.opacity(0.01))
                         .clipShape(Capsule())
                 }
+                .disabled(!isNextEnabled)
                 .buttonStyle(RippleButtonStyle(rippleColor: Color.white.opacity(0.3)))
                 .background(
                     Capsule()
-                        .glassEffect(.regular.tint(Color.textSecondary.opacity(0.6)), in: .capsule)
+                        .glassEffect(.regular.tint(isNextEnabled ? Color.brandGreen.opacity(0.6) : Color.textSecondary.opacity(0.2)), in: .capsule)
                 )
             }
         }

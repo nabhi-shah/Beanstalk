@@ -32,7 +32,7 @@ struct ContentView: View {
                 .scaledToFit()
                 .frame(height: 36)
                 .matchedGeometryEffect(id: "logo", in: animationNamespace)
-                .padding(.top, 60)
+                .padding(.top, 40)
                 .padding(.bottom, 16)
                 .blur(radius: focusedField != nil ? 10.0 : 0.0)
                 .opacity(focusedField != nil ? 0.0 : 1.0)
@@ -127,7 +127,7 @@ struct ContentView: View {
             .buttonStyle(RippleButtonStyle(rippleColor: Color.white.opacity(0.4)))
             .background(
                 Capsule()
-                    .glassEffect(.regular.tint(Color.brandGreen.opacity(0.8)), in: .capsule)
+                    .glassEffect(.regular.tint(Color.brandGreen.opacity(0.4)), in: .capsule)
             )
             .padding(.top, 8)
 

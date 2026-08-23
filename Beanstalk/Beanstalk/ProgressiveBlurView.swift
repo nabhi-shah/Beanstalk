@@ -74,7 +74,7 @@ struct ProgressiveBlurView: View {
     var edge: BlurEdge = .top
     
     var body: some View {
-        VariableBlurView(maxBlurRadius: 20, direction: edge == .top ? .blurredTopClearBottom : .blurredBottomClearTop)
+        VariableBlurView(maxBlurRadius: 10, direction: edge == .top ? .blurredTopClearBottom : .blurredBottomClearTop)
             .frame(height: height)
             .ignoresSafeArea()
     }

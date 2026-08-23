@@ -29,7 +29,7 @@ struct OnboardingView: View {
                     .scaledToFit()
                     .frame(height: 36)
                     .matchedGeometryEffect(id: "logo", in: animationNamespace)
-                    .padding(.top, 60)
+                    .padding(.top, 40)
                     .transition(.identity)
                 
                 // Bottom Sheet
@@ -38,7 +38,6 @@ struct OnboardingView: View {
                 
                 ZStack(alignment: .top) {
                     Color.white
-                        .cornerRadius(48, corners: [.topLeft, .topRight])
                         .ignoresSafeArea(edges: .bottom)
                     
                     ScrollView {
@@ -62,8 +61,7 @@ struct OnboardingView: View {
                     
                     // Sticky Header with Progressive Blur
                     ZStack(alignment: .top) {
-                        ProgressiveBlurView(height: 140, edge: .top)
-                            .cornerRadius(48, corners: [.topLeft, .topRight])
+                        ProgressiveBlurView(height: 80, edge: .top)
                         
                         VStack(spacing: 4) {
                             Text("What would you like to follow?")
@@ -81,9 +79,10 @@ struct OnboardingView: View {
                     VStack {
                         Spacer()
                         ZStack(alignment: .bottom) {
-                            ProgressiveBlurView(height: 140, edge: .bottom)
+                            ProgressiveBlurView(height: 80, edge: .bottom)
                             
                             OnboardingBottomNav(
+                                isNextEnabled: !selectedPublications.isEmpty,
                                 onBack: {
                                     appState = .login
                                 },
@@ -95,6 +94,8 @@ struct OnboardingView: View {
                     }
                     .ignoresSafeArea(edges: .bottom)
                 }
+                .cornerRadius(48, corners: [.topLeft, .topRight])
+                .shadow(color: Color.black.opacity(0.18), radius: 37.5, x: 0, y: 15)
             }
             .transition(.move(edge: .bottom))
             .ignoresSafeArea(edges: .bottom)

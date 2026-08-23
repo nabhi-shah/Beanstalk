@@ -7,16 +7,6 @@ struct OnboardingBottomNav: View {
     
     var body: some View {
         VStack(spacing: 16) {
-            // Page Indicator
-            HStack(spacing: 6) {
-                Circle().fill(Color.brandGreen).frame(width: 7, height: 7)
-                Circle().fill(Color.brandGreen).frame(width: 7, height: 7)
-                Capsule().fill(Color.textSecondary).frame(width: 27, height: 7)
-                Circle().fill(Color.secondaryBackground).frame(width: 7, height: 7)
-                Circle().fill(Color.secondaryBackground).frame(width: 7, height: 7)
-            }
-            .padding(.top, 8)
-            
             // Buttons
             HStack(spacing: 8) {
                 Button(action: onBack) {
@@ -47,7 +37,7 @@ struct OnboardingBottomNav: View {
                 .buttonStyle(RippleButtonStyle(rippleColor: Color.white.opacity(0.3)))
                 .background(
                     Capsule()
-                        .glassEffect(.regular.tint(isNextEnabled ? Color.brandGreen.opacity(0.6) : Color.textSecondary.opacity(0.2)), in: .capsule)
+                        .glassEffect(.regular.tint(isNextEnabled ? Color.brandGreen.opacity(0.4) : Color.textSecondary.opacity(0.2)), in: .capsule)
                 )
             }
         }

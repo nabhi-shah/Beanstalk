@@ -67,10 +67,6 @@ struct OnboardingView: View {
                             Text("What would you like to follow?")
                                 .font(.custom("InclusiveSans-Regular", size: 20))
                                 .foregroundColor(.textDark)
-                            
-                            Text("Select up to three")
-                                .font(.custom("InclusiveSans-Regular", size: 16))
-                                .foregroundColor(.textSecondary)
                         }
                         .padding(.top, 40)
                     }
@@ -87,7 +83,7 @@ struct OnboardingView: View {
                                     appState = .login
                                 },
                                 onNext: {
-                                    // Next action
+                                    appState = .feed
                                 }
                             )
                         }
@@ -107,9 +103,7 @@ struct OnboardingView: View {
         if selectedPublications.contains(pub) {
             selectedPublications.remove(pub)
         } else {
-            if selectedPublications.count < 3 {
-                selectedPublications.insert(pub)
-            }
+            selectedPublications.insert(pub)
         }
     }
 }

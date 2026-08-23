@@ -11,12 +11,11 @@ struct ProgressiveBlurView: View {
     var body: some View {
         Rectangle()
             .fill(.ultraThinMaterial)
-            .opacity(0.6)
             .mask(
                 LinearGradient(
                     gradient: Gradient(stops: [
                         .init(color: .black, location: 0.0),
-                        .init(color: .black, location: 0.6),
+                        .init(color: .black, location: 0.15),
                         .init(color: .clear, location: 1.0)
                     ]),
                     startPoint: edge == .top ? .top : .bottom,

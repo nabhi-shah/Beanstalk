@@ -138,20 +138,19 @@ struct FeedContentView: View {
 
 struct ArticleRowView: View {
     let article: Article
+    @StateObject private var loader = ArticleImageLoader()
     
     var body: some View {
         Group {
             if let url = article.thumbnailURL {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let image):
-                        cardContent(image: image)
-                    default:
-                        cardContent(image: nil)
+                cardContent(image: loader.processedImage, originalImage: loader.originalImage)
+                    .onAppear {
+                        // Calculate width dynamically
+                        let cardWidth = UIScreen.main.bounds.width - 24
+                        loader.load(url: url, size: CGSize(width: cardWidth, height: 280))
                     }
-                }
             } else {
-                cardContent(image: nil)
+                cardContent(image: nil, originalImage: nil)
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
@@ -163,7 +162,7 @@ struct ArticleRowView: View {
     }
     
     @ViewBuilder
-    private func cardContent(image: Image?) -> some View {
+    private func cardContent(image: Image?, originalImage: Image?) -> some View {
         VStack(spacing: 0) {
             // Thumbnail Section
             Color.clear
@@ -171,20 +170,14 @@ struct ArticleRowView: View {
                 .overlay(
                     Group {
                         if let image = image {
-                            Color.clear
-                                .overlay(
-                                    image
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                )
-                                .clipped()
-                                .overlay(
-                                    VariableBlurView(maxBlurRadius: 94, direction: .blurredBottomClearTop, startOffset: 0.75)
-                                )
-                                .mask(
+                            // This image already has CIMaskedVariableBlur baked in!
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .mask( // Blend into content section
                                     LinearGradient(
                                         stops: [
-                                            .init(color: .white, location: 0.90),
+                                            .init(color: .white, location: 0.95),
                                             .init(color: .clear, location: 1.0)
                                         ],
                                         startPoint: .top,
@@ -236,8 +229,8 @@ struct ArticleRowView: View {
             ZStack {
                 Color(red: 245/255, green: 245/255, blue: 245/255) // #F5F5F5
                 
-                if let image = image {
-                    image
+                if let orig = originalImage {
+                    orig
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .blur(radius: 94)
@@ -252,4 +245,113 @@ struct ArticleRowView: View {
 #Preview {
     @Previewable @Namespace var namespace
     FeedView(appState: .constant(.feed), animationNamespace: namespace)
+}
+import SwiftUI
+import CoreImage
+import CoreImage.CIFilterBuiltins
+
+class ImageCache {
+    static let shared = ImageCache()
+    private var cache = NSCache<NSString, UIImage>()
+    
+    func get(url: URL, size: CGSize) -> UIImage? {
+        let key = "\(url.absoluteString)_\(size.width)_\(size.height)" as NSString
+        return cache.object(forKey: key)
+    }
+    
+    func set(_ image: UIImage, for url: URL, size: CGSize) {
+        let key = "\(url.absoluteString)_\(size.width)_\(size.height)" as NSString
+        cache.setObject(image, forKey: key)
+    }
+    
+    func getOriginal(url: URL) -> UIImage? {
+        return cache.object(forKey: url.absoluteString as NSString)
+    }
+    
+    func setOriginal(_ image: UIImage, for url: URL) {
+        cache.setObject(image, forKey: url.absoluteString as NSString)
+    }
+}
+
+class ArticleImageLoader: ObservableObject {
+    @Published var processedImage: Image?
+    @Published var originalImage: Image?
+    
+    private var url: URL?
+    private var size: CGSize = .zero
+    private let context = CIContext(options: [.useSoftwareRenderer: false])
+    
+    func load(url: URL, size: CGSize) {
+        guard size.width > 0 && size.height > 0 else { return }
+        self.url = url
+        self.size = size
+        
+        if let cachedProcessed = ImageCache.shared.get(url: url, size: size),
+           let cachedOriginal = ImageCache.shared.getOriginal(url: url) {
+            self.processedImage = Image(uiImage: cachedProcessed)
+            self.originalImage = Image(uiImage: cachedOriginal)
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+            guard let self = self, let data = data, let uiImage = UIImage(data: data) else { return }
+            
+            ImageCache.shared.setOriginal(uiImage, for: url)
+            
+            DispatchQueue.global(qos: .userInitiated).async {
+                if let processed = self.process(uiImage: uiImage, size: size) {
+                    ImageCache.shared.set(processed, for: url, size: size)
+                    DispatchQueue.main.async {
+                        if self.url == url && self.size == size {
+                            self.originalImage = Image(uiImage: uiImage)
+                            self.processedImage = Image(uiImage: processed)
+                        }
+                    }
+                }
+            }
+        }.resume()
+    }
+    
+    private func process(uiImage: UIImage, size: CGSize) -> UIImage? {
+        let aspectWidth = size.width / uiImage.size.width
+        let aspectHeight = size.height / uiImage.size.height
+        let scale = max(aspectWidth, aspectHeight)
+        
+        let scaledWidth = uiImage.size.width * scale
+        let scaledHeight = uiImage.size.height * scale
+        
+        let rect = CGRect(
+            x: (size.width - scaledWidth) / 2.0,
+            y: (size.height - scaledHeight) / 2.0,
+            width: scaledWidth,
+            height: scaledHeight
+        )
+        
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let renderer = UIGraphicsImageRenderer(size: size, format: format)
+        let cropped = renderer.image { _ in
+            uiImage.draw(in: rect)
+        }
+        
+        guard let ciImage = CIImage(image: cropped) else { return nil }
+        
+        let gradient = CIFilter.linearGradient()
+        gradient.color0 = CIColor.white
+        gradient.color1 = CIColor.clear
+        gradient.point0 = CGPoint(x: 0, y: 0)
+        gradient.point1 = CGPoint(x: 0, y: size.height * 0.25)
+        
+        guard let mask = gradient.outputImage else { return nil }
+        
+        let blur = CIFilter.maskedVariableBlur()
+        blur.inputImage = ciImage
+        blur.mask = mask
+        blur.radius = 94
+        
+        guard let output = blur.outputImage,
+              let cgImage = context.createCGImage(output, from: CGRect(origin: .zero, size: size)) else { return nil }
+        
+        return UIImage(cgImage: cgImage)
+    }
 }

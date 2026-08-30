@@ -82,7 +82,7 @@ struct FeedContentView: View {
                 }
                 .frame(height: 0)
                 
-                LazyVStack(spacing: 26) {
+                LazyVStack(spacing: 16) {
                     ForEach(MockData.articles) { article in
                         NavigationLink(destination: ArticleDetailView(article: article)) {
                             ArticleRowView(article: article)

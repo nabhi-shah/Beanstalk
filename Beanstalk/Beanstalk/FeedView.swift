@@ -170,14 +170,21 @@ struct ArticleRowView: View {
     private func cardContent(image: Image?) -> some View {
         ZStack(alignment: .bottom) {
             // Background Image
-            if let image = image {
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .glur(radius: 24.0, offset: 0.72, interpolation: 0.28, direction: .down)
-            } else {
-                Color(red: 245/255, green: 245/255, blue: 245/255) // #F5F5F5
-            }
+            Color.clear
+                .overlay(
+                    GeometryReader { proxy in
+                        if let image = image {
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: proxy.size.width, height: proxy.size.height)
+                                .clipped()
+                                .glur(radius: 24.0, offset: 0.72, interpolation: 0.28, direction: .down)
+                        } else {
+                            Color(red: 245/255, green: 245/255, blue: 245/255) // #F5F5F5
+                        }
+                    }
+                )
             
             // Content Section
             VStack(alignment: .leading, spacing: 12) {

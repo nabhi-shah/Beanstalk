@@ -18,11 +18,13 @@ struct FeedView: View {
     
     @State private var selectedTab: MainTab = .home
     @State private var minimizeProgress: Double = 0
+    @State private var selectedArticle: Article?
+    @Namespace private var heroAnimation
     
     var body: some View {
         NavigationStack {
             UnionTabView(selection: $selectedTab, tabs: [.home, .search, .saved, .profile], minimizeProgress: minimizeProgress) {
-                FeedContentView(animationNamespace: animationNamespace, minimizeProgress: $minimizeProgress).unionTab(MainTab.home)
+                FeedContentView(animationNamespace: animationNamespace, minimizeProgress: $minimizeProgress, selectedArticle: $selectedArticle, heroAnimation: heroAnimation).unionTab(MainTab.home)
                 
                 Color.appBackground.ignoresSafeArea()
                     .overlay(Text("Search").foregroundColor(.textSecondary))
@@ -66,15 +68,25 @@ struct FeedView: View {
             .toolbar(.hidden, for: .navigationBar)
         }
         .tint(.brandGreen)
+        .overlay(
+            Group {
+                if let selectedArticle = selectedArticle {
+                    ArticleDetailView(article: selectedArticle, animation: heroAnimation, selectedArticle: $selectedArticle)
+                        .zIndex(100)
+                        .transition(.identity) // Rely on matchedGeometryEffect
+                }
+            }
+        )
     }
 }
 
 struct FeedContentView: View {
     var animationNamespace: Namespace.ID
     @Binding var minimizeProgress: Double
+    @Binding var selectedArticle: Article?
+    var heroAnimation: Namespace.ID
+    
     @State private var lastOffset: CGFloat = 0
-    @State private var selectedArticle: Article?
-    @Namespace private var heroAnimation
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -142,15 +154,6 @@ struct FeedContentView: View {
                 Spacer()
             }
         }
-        .overlay(
-            Group {
-                if let selectedArticle = selectedArticle {
-                    ArticleDetailView(article: selectedArticle, animation: heroAnimation, selectedArticle: $selectedArticle)
-                        .zIndex(100)
-                        .transition(.identity) // We rely on matchedGeometryEffect for transitions
-                }
-            }
-        )
     }
 }
 

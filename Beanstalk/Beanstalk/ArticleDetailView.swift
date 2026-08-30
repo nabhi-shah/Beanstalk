@@ -13,30 +13,49 @@ struct ArticleDetailView: View {
             
             ZStack(alignment: .top) { // Align to top so image anchors to top
                 // Base background for the expanded card (covers the bottom text area)
-                Color(red: 245/255, green: 245/255, blue: 245/255)
-                
-                // Background Image
-                GeometryReader { proxy in
+                ZStack {
+                    Color(red: 245/255, green: 245/255, blue: 245/255)
+                    
                     if let url = article.thumbnailURL {
                         AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .success(let image):
+                            if let image = phase.image {
                                 image
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
-                                    .frame(width: proxy.size.width, height: proxy.size.height)
+                                    .blur(radius: 94)
+                                    .opacity(0.26)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                                     .clipped()
-                                    .glur(radius: 24.0, offset: 0.72, interpolation: 0.28, direction: .down)
-                            default:
+                            }
+                        }
+                    }
+                }
+                
+                // Background Image
+                Color.clear
+                    .overlay(
+                        GeometryReader { proxy in
+                            if let url = article.thumbnailURL {
+                                AsyncImage(url: url) { phase in
+                                    switch phase {
+                                    case .success(let image):
+                                        image
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                            .frame(width: proxy.size.width, height: proxy.size.height)
+                                            .clipped()
+                                            .glur(radius: 24.0, offset: 0.72, interpolation: 0.28, direction: .down)
+                                    default:
+                                        Color.clear
+                                    }
+                                }
+                            } else {
                                 Color.clear
                             }
                         }
-                    } else {
-                        Color.clear
-                    }
-                }
-                .frame(height: 460) // Prevent the image from vertically stretching out of proportion!
-                .matchedGeometryEffect(id: "background-\(article.id)", in: animation)
+                    )
+                    .frame(height: 420) // Match ArticleRowView minHeight to prevent zoom
+                    .matchedGeometryEffect(id: "background-\(article.id)", in: animation)
                 
                 // Content Section (Bottom)
                 VStack {

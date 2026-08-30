@@ -140,39 +140,36 @@ struct ArticleRowView: View {
     let article: Article
     
     var body: some View {
-        ZStack(alignment: .bottom) {
-            // Background
-            Color.secondaryBackground
-            
-            // Image with fade mask
-            VStack(spacing: 0) {
-                if let url = article.thumbnailURL {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        default:
-                            Rectangle().fill(Color.gray.opacity(0.1))
-                        }
+        VStack(spacing: 0) {
+            // Thumbnail Section
+            if let url = article.thumbnailURL {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    default:
+                        Rectangle().fill(Color.clear)
                     }
-                    .frame(height: 280)
-                    .mask(
-                        LinearGradient(
-                            stops: [
-                                .init(color: .white, location: 0.6),
-                                .init(color: .clear, location: 1.0)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
                 }
-                Spacer()
+                .frame(height: 280)
+                .mask(
+                    LinearGradient(
+                        stops: [
+                            .init(color: .white, location: 0.85),
+                            .init(color: .clear, location: 1.0)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+            } else {
+                Rectangle().fill(Color.clear)
+                    .frame(height: 280)
             }
             
-            // Text Content Overlay
+            // Content Section
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 12) {
                     // Publication Logo
@@ -210,7 +207,24 @@ struct ArticleRowView: View {
             .padding(24)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(height: 400)
+        .background(
+            ZStack {
+                Color(red: 245/255, green: 245/255, blue: 245/255) // #F5F5F5
+                
+                if let url = article.thumbnailURL {
+                    AsyncImage(url: url) { phase in
+                        if case .success(let image) = phase {
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        }
+                    }
+                    .blur(radius: 24)
+                    .opacity(0.26)
+                }
+            }
+            .clipped()
+        )
         .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
         .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
     }

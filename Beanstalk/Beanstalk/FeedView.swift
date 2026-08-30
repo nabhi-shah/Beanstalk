@@ -146,35 +146,42 @@ struct ArticleRowView: View {
                 .frame(height: 280)
                 .overlay(
                     Group {
-                        // 1. Opaque Blurred Image (creates the progressive blur effect)
-                        if let url = article.thumbnailURL {
-                            AsyncImage(url: url) { phase in
-                                if case .success(let image) = phase {
-                                    image.resizable().aspectRatio(contentMode: .fill)
-                                }
-                            }
-                        }
-                    }
-                    .blur(radius: 24)
-                    .mask(
-                        LinearGradient(
-                            stops: [
-                                .init(color: .white, location: 0.95),
-                                .init(color: .clear, location: 1.0)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                )
-                .overlay(
-                    Group {
-                        // 2. Sharp Image (fades out first to reveal the blur)
                         if let url = article.thumbnailURL {
                             AsyncImage(url: url) { phase in
                                 switch phase {
                                 case .success(let image):
-                                    image.resizable().aspectRatio(contentMode: .fill)
+                                    ZStack {
+                                        // 1. Opaque Blurred Image (creates the progressive blur effect)
+                                        image
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                            .blur(radius: 24)
+                                            .mask(
+                                                LinearGradient(
+                                                    stops: [
+                                                        .init(color: .white, location: 0.95),
+                                                        .init(color: .clear, location: 1.0)
+                                                    ],
+                                                    startPoint: .top,
+                                                    endPoint: .bottom
+                                                )
+                                            )
+                                        
+                                        // 2. Sharp Image (fades out first to reveal the blur)
+                                        image
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                            .mask(
+                                                LinearGradient(
+                                                    stops: [
+                                                        .init(color: .white, location: 0.85),
+                                                        .init(color: .clear, location: 0.95)
+                                                    ],
+                                                    startPoint: .top,
+                                                    endPoint: .bottom
+                                                )
+                                            )
+                                    }
                                 default:
                                     Rectangle().fill(Color.clear)
                                 }
@@ -183,16 +190,6 @@ struct ArticleRowView: View {
                             Rectangle().fill(Color.clear)
                         }
                     }
-                    .mask(
-                        LinearGradient(
-                            stops: [
-                                .init(color: .white, location: 0.85),
-                                .init(color: .clear, location: 0.95)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
                 )
                 .clipped()
             

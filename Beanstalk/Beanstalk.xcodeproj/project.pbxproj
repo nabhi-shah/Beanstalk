@@ -50,11 +50,15 @@
 		};
 		0A6B19933033525E00B75816 /* BeanstalkTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = BeanstalkTests;
 			sourceTree = "<group>";
 		};
 		0A6B199D3033525E00B75816 /* BeanstalkUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = BeanstalkUITests;
 			sourceTree = "<group>";
 		};
@@ -125,6 +129,7 @@
 			);
 			name = Beanstalk;
 			packageProductDependencies = (
+				712F791B3E4F909F06C238DD /* Glur */,
 			);
 			productName = Beanstalk;
 			productReference = 0A6B197F3033525D00B75816 /* Beanstalk.app */;
@@ -205,6 +210,7 @@
 			mainGroup = 0A6B19763033525D00B75816;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				EC4AD5334674C9160BD85810 /* XCRemoteSwiftPackageReference "Glur" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0A6B19803033525D00B75816 /* Products */;
@@ -587,6 +593,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		EC4AD5334674C9160BD85810 /* XCRemoteSwiftPackageReference "Glur" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/joogps/Glur.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		712F791B3E4F909F06C238DD /* Glur */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EC4AD5334674C9160BD85810 /* XCRemoteSwiftPackageReference "Glur" */;
+			productName = Glur;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0A6B19773033525D00B75816 /* Project object */;
 }

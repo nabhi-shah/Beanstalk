@@ -1,13 +1,13 @@
 {
-  "originHash" : "b71025aa9c2d7e4af996554e07f57d7bc770ff624244d4f0e39955c086df0660",
+  "originHash" : "439b837a1ac384e9d1e8fc6431308c00b47f1978dafcef482f21e9629026fb89",
   "pins" : [
     {
-      "identity" : "swift",
+      "identity" : "glur",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/phosphor-icons/swift.git",
+      "location" : "https://github.com/joogps/Glur.git",
       "state" : {
-        "revision" : "9a9467181782bbe319ad4935d0993c77cd8a5fbc",
-        "version" : "2.1.0"
+        "branch" : "main",
+        "revision" : "ba4f05d3c9a608ec773b9305f2af6089390de68a"
       }
     }
   ],

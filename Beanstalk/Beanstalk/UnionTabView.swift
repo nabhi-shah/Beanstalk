@@ -276,6 +276,7 @@ public struct UnionTabView<Tab: Hashable, Content: View, TabItemContent: View>: 
         // Applied outside the scale so the two are independent: a host can shrink
         // the bar, send it off the bottom, or neither.
         .offset(y: hideOffset)
+        .blur(radius: hideOffset > 0 ? (hideOffset / 10) : 0)
         .animation(minimizeAnimation, value: hideOffset)
     }
 
@@ -310,6 +311,7 @@ public struct UnionTabView<Tab: Hashable, Content: View, TabItemContent: View>: 
         .allowsHitTesting(false)
         .padding(4)
         .offset(y: hideOffset)
+        .blur(radius: hideOffset > 0 ? (hideOffset / 10) : 0)
         .animation(minimizeAnimation, value: hideOffset)
     }
 }

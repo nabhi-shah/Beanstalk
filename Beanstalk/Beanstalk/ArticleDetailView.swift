@@ -111,7 +111,8 @@ struct ArticleDetailView: View {
                         Spacer()
                         
                         Button(action: { }) {
-                            Image(systemName: "bookmark")
+                            Image("bookmark")
+                                .renderingMode(.template)
                                 .font(.system(size: 16, weight: .bold))
                                 .foregroundColor(.textDark)
                                 .frame(width: 44, height: 44)
@@ -145,6 +146,7 @@ struct ArticleDetailView: View {
             .matchedGeometryEffect(id: "card-\(article.id)", in: animation)
             .padding(.top, 44) // Status bar
             .padding(.bottom, 34) // Home indicator
+            .padding(.horizontal, 12)
             .ignoresSafeArea()
         }
     }

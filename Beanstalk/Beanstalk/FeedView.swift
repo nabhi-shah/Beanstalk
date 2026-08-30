@@ -222,17 +222,13 @@ struct ArticleRowView: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 12) {
                     // Publication Logo
-                    ZStack {
-                        Circle().fill(Color.white)
-                            .frame(width: 32, height: 32)
-                            .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
-                        
-                        Image(article.publication)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 20, height: 20)
-                            .clipShape(Circle())
-                    }
+                    Image(article.publication)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 32, height: 32)
+                        .background(Color.white)
+                        .clipShape(Circle())
+                        .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
                     
                     VStack(alignment: .leading, spacing: 2) {
                         Text(article.publication)

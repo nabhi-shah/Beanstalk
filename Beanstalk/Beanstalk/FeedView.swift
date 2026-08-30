@@ -155,6 +155,10 @@ struct ArticleRowView: View {
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 32, style: .continuous)
+                .stroke(Color(red: 223/255, green: 223/255, blue: 223/255), lineWidth: 0.5)
+        )
         .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
     }
     

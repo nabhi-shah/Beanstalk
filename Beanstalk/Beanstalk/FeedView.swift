@@ -168,35 +168,16 @@ struct ArticleRowView: View {
     
     @ViewBuilder
     private func cardContent(image: Image?) -> some View {
-        VStack(spacing: 0) {
-            // Thumbnail Section
-            Color.clear
-                .frame(height: 280)
-                .overlay(
-                    Group {
-                        if let image = image {
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(height: 280)
-                                .clipped()
-                                .glur(radius: 94.0, offset: 0.75, interpolation: 0.25, direction: .down)
-                                .mask( // Blend into content section
-                                    LinearGradient(
-                                        stops: [
-                                            .init(color: .white, location: 0.95),
-                                            .init(color: .clear, location: 1.0)
-                                        ],
-                                        startPoint: .top,
-                                        endPoint: .bottom
-                                    )
-                                )
-                        } else {
-                            Rectangle().fill(Color.clear)
-                        }
-                    }
-                )
-                .clipped()
+        ZStack(alignment: .bottom) {
+            // Background Image
+            if let image = image {
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .glur(radius: 24.0, offset: 0.72, interpolation: 0.28, direction: .down)
+            } else {
+                Color(red: 245/255, green: 245/255, blue: 245/255) // #F5F5F5
+            }
             
             // Content Section
             VStack(alignment: .leading, spacing: 12) {
@@ -230,22 +211,21 @@ struct ArticleRowView: View {
                     .multilineTextAlignment(.leading)
             }
             .padding(24)
+            .padding(.top, 48) // Extra padding to allow the gradient to fade in above the text
             .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                LinearGradient(
+                    stops: [
+                        .init(color: .clear, location: 0.0),
+                        .init(color: Color(red: 245/255, green: 245/255, blue: 245/255).opacity(0.74), location: 0.4),
+                        .init(color: Color(red: 245/255, green: 245/255, blue: 245/255).opacity(0.74), location: 1.0)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
         }
-        .background(
-            ZStack {
-                Color(red: 245/255, green: 245/255, blue: 245/255) // #F5F5F5
-                
-                if let image = image {
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .blur(radius: 94)
-                        .opacity(0.26)
-                }
-            }
-            .clipped()
-        )
+        .frame(minHeight: 420)
     }
 }
 

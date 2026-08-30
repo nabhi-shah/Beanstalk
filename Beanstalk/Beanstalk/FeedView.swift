@@ -146,13 +146,35 @@ struct ArticleRowView: View {
                 .frame(height: 280)
                 .overlay(
                     Group {
+                        // 1. Opaque Blurred Image (creates the progressive blur effect)
+                        if let url = article.thumbnailURL {
+                            AsyncImage(url: url) { phase in
+                                if case .success(let image) = phase {
+                                    image.resizable().aspectRatio(contentMode: .fill)
+                                }
+                            }
+                        }
+                    }
+                    .blur(radius: 24)
+                    .mask(
+                        LinearGradient(
+                            stops: [
+                                .init(color: .white, location: 0.95),
+                                .init(color: .clear, location: 1.0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                )
+                .overlay(
+                    Group {
+                        // 2. Sharp Image (fades out first to reveal the blur)
                         if let url = article.thumbnailURL {
                             AsyncImage(url: url) { phase in
                                 switch phase {
                                 case .success(let image):
-                                    image
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fill)
+                                    image.resizable().aspectRatio(contentMode: .fill)
                                 default:
                                     Rectangle().fill(Color.clear)
                                 }
@@ -161,23 +183,18 @@ struct ArticleRowView: View {
                             Rectangle().fill(Color.clear)
                         }
                     }
-                )
-                .overlay(
-                    VariableBlurView(maxBlurRadius: 24, direction: .blurredBottomClearTop)
-                        .frame(height: 42),
-                    alignment: .bottom
-                )
-                .clipped()
-                .mask(
-                    LinearGradient(
-                        stops: [
-                            .init(color: .white, location: 0.85),
-                            .init(color: .clear, location: 1.0)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
+                    .mask(
+                        LinearGradient(
+                            stops: [
+                                .init(color: .white, location: 0.85),
+                                .init(color: .clear, location: 0.95)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
                     )
                 )
+                .clipped()
             
             // Content Section
             VStack(alignment: .leading, spacing: 12) {

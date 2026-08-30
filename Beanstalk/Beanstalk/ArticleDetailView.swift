@@ -163,6 +163,7 @@ struct ArticleDetailView: View {
                     .padding(.bottom, 24)
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
             .matchedGeometryEffect(id: "card-\(article.id)", in: animation)
             .padding(.top, 44) // Status bar

@@ -178,6 +178,8 @@ struct ArticleRowView: View {
                             image
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
+                                .frame(height: 280)
+                                .clipped()
                                 .glur(radius: 94.0, offset: 0.75, interpolation: 0.25, direction: .down)
                                 .mask( // Blend into content section
                                     LinearGradient(

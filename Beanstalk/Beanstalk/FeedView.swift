@@ -176,11 +176,11 @@ struct ArticleRowView: View {
                                             .aspectRatio(contentMode: .fill)
                                     )
                                     .clipped()
-                                    .blur(radius: 24)
+                                    .blur(radius: 94)
                                     .mask(
                                         LinearGradient(
                                             stops: [
-                                                .init(color: .white, location: 0.95),
+                                                .init(color: .white, location: 0.90),
                                                 .init(color: .clear, location: 1.0)
                                             ],
                                             startPoint: .top,
@@ -199,8 +199,8 @@ struct ArticleRowView: View {
                                     .mask(
                                         LinearGradient(
                                             stops: [
-                                                .init(color: .white, location: 0.85),
-                                                .init(color: .clear, location: 0.95)
+                                                .init(color: .white, location: 0.75),
+                                                .init(color: .clear, location: 0.90)
                                             ],
                                             startPoint: .top,
                                             endPoint: .bottom
@@ -260,7 +260,7 @@ struct ArticleRowView: View {
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .blur(radius: 24)
+                        .blur(radius: 94)
                         .opacity(0.26)
                 }
             }

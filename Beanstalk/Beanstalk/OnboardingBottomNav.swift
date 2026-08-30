@@ -35,7 +35,7 @@ struct OnboardingBottomNav: View {
             .buttonStyle(RippleButtonStyle(rippleColor: Color.white.opacity(0.3)))
             .background(
                 Capsule()
-                    .glassEffect(.regular.tint(isNextEnabled ? Color.brandGreen.opacity(0.9) : Color.textSecondary.opacity(0.2)), in: .capsule)
+                    .glassEffect(.regular.tint(isNextEnabled ? Color.brandGreen.opacity(0.6) : Color.textSecondary.opacity(0.2)), in: .capsule)
             )
         }
         .padding(.horizontal, 24)

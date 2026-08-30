@@ -221,7 +221,7 @@ public struct UnionTabView<Tab: Hashable, Content: View, TabItemContent: View>: 
                 let tabWidth = geometry.size.width / CGFloat(tabs.count)
                 InteractiveSegmentedControl(
                     size: geometry.size,
-                    barTint: .brandGreen,
+                    barTint: .brandGreen.opacity(0.6),
                     selectedIndex: Binding(
                         get: { selectedIndex },
                         set: { newIndex in

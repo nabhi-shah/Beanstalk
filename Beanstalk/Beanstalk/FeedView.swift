@@ -1,15 +1,26 @@
 import SwiftUI
 
+enum MainTab: Hashable {
+    case home, search, saved, profile
+}
+struct ScrollOffsetKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
 struct FeedView: View {
     @Binding var appState: AppState
     var animationNamespace: Namespace.ID
     
     @State private var selectedTab: MainTab = .home
+    @State private var minimizeProgress: Double = 0
     
     var body: some View {
         NavigationStack {
-            UnionTabView(selection: $selectedTab, tabs: [.home, .search, .saved, .profile]) {
-                FeedContentView().unionTab(MainTab.home)
+            UnionTabView(selection: $selectedTab, tabs: [.home, .search, .saved, .profile], minimizeProgress: minimizeProgress) {
+                FeedContentView(animationNamespace: animationNamespace, minimizeProgress: $minimizeProgress).unionTab(MainTab.home)
                 
                 Color.appBackground.ignoresSafeArea()
                     .overlay(Text("Search").foregroundColor(.textSecondary))
@@ -57,36 +68,69 @@ struct FeedView: View {
 }
 
 struct FeedContentView: View {
+    var animationNamespace: Namespace.ID
+    @Binding var minimizeProgress: Double
+    @State private var lastOffset: CGFloat = 0
+
     var body: some View {
         ZStack(alignment: .top) {
             Color.appBackground.ignoresSafeArea()
             
-            VStack(spacing: 0) {
-                // Custom Header
-                HStack {
-                    Spacer()
-                    Text("Beanstalk.")
-                        .font(.custom("InclusiveSans-Regular", size: 28))
-                        .foregroundColor(.brandGreen)
-                        .padding(.top, 16)
-                        .padding(.bottom, 8)
-                    Spacer()
+            ScrollView {
+                GeometryReader { proxy in
+                    Color.clear.preference(key: ScrollOffsetKey.self, value: proxy.frame(in: .named("scroll")).minY)
                 }
-                .background(Color.appBackground)
+                .frame(height: 0)
                 
-                ScrollView {
-                    LazyVStack(spacing: 24) {
-                        ForEach(MockData.articles) { article in
-                            NavigationLink(destination: ArticleDetailView(article: article)) {
-                                ArticleRowView(article: article)
-                            }
-                            .buttonStyle(PlainButtonStyle())
+                LazyVStack(spacing: 24) {
+                    ForEach(MockData.articles) { article in
+                        NavigationLink(destination: ArticleDetailView(article: article)) {
+                            ArticleRowView(article: article)
                         }
+                        .buttonStyle(PlainButtonStyle())
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
-                    .padding(.bottom, 120) // Space for TabBar
                 }
+                .padding(.horizontal, 20)
+                .padding(.top, 80)
+                .padding(.bottom, 120) // Space for TabBar
+            }
+            .coordinateSpace(name: "scroll")
+            .onPreferenceChange(ScrollOffsetKey.self) { offset in
+                let delta = lastOffset - offset
+                lastOffset = offset
+                
+                if offset >= 0 {
+                    withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8)) {
+                        minimizeProgress = 0
+                    }
+                } else {
+                    withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8)) {
+                        let newProgress = minimizeProgress + Double(delta / 100.0)
+                        minimizeProgress = min(max(newProgress, 0), 1)
+                    }
+                }
+            }
+            
+            VStack {
+                Spacer()
+                ProgressiveBlurView(height: 140, edge: .bottom)
+            }
+            .ignoresSafeArea()
+
+            ProgressiveBlurView(height: 120, edge: .top)
+
+            // Custom Header
+            HStack {
+                Spacer()
+                Image("BeanstalkLogo")
+                    .renderingMode(.original)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 24)
+                    .matchedGeometryEffect(id: "logo", in: animationNamespace)
+                    .padding(.top, 4)
+                    .padding(.bottom, 8)
+                Spacer()
             }
         }
     }

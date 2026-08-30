@@ -148,7 +148,7 @@ struct ArticleRowView: View {
                     case .success(let image):
                         image
                             .resizable()
-                            .aspectRatio(contentMode: .fit)
+                            .aspectRatio(contentMode: .fill)
                     default:
                         Rectangle().fill(Color.clear)
                     }

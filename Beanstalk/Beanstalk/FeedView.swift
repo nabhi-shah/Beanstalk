@@ -190,7 +190,7 @@ struct ArticleRowView: View {
                 .stroke(Color(red: 223/255, green: 223/255, blue: 223/255), lineWidth: 0.5)
         )
         .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
-        .matchedGeometryEffect(id: "card-\(article.id)", in: animation)
+        .matchedGeometryEffect(id: "card-\(article.id)", in: animation, isSource: !isExpanded)
     }
     
     @ViewBuilder
@@ -212,7 +212,7 @@ struct ArticleRowView: View {
                         }
                     }
                 )
-                .matchedGeometryEffect(id: "background-\(article.id)", in: animation)
+                .matchedGeometryEffect(id: "background-\(article.id)", in: animation, isSource: !isExpanded)
             
             // Content Section
             VStack(alignment: .leading, spacing: 12) {

@@ -142,18 +142,27 @@ struct ArticleRowView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Thumbnail Section
-            if let url = article.thumbnailURL {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    default:
-                        Rectangle().fill(Color.clear)
-                    }
-                }
+            Color.clear
                 .frame(height: 280)
+                .overlay(
+                    Group {
+                        if let url = article.thumbnailURL {
+                            AsyncImage(url: url) { phase in
+                                switch phase {
+                                case .success(let image):
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                default:
+                                    Rectangle().fill(Color.clear)
+                                }
+                            }
+                        } else {
+                            Rectangle().fill(Color.clear)
+                        }
+                    }
+                )
+                .clipped()
                 .mask(
                     LinearGradient(
                         stops: [
@@ -164,10 +173,6 @@ struct ArticleRowView: View {
                         endPoint: .bottom
                     )
                 )
-            } else {
-                Rectangle().fill(Color.clear)
-                    .frame(height: 280)
-            }
             
             // Content Section
             VStack(alignment: .leading, spacing: 12) {

@@ -171,46 +171,26 @@ struct ArticleRowView: View {
                 .overlay(
                     Group {
                         if let image = image {
-                            ZStack {
-                                // 1. Opaque Blurred Image (creates the progressive blur effect)
-                                Color.clear
-                                    .overlay(
-                                        image
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
+                            Color.clear
+                                .overlay(
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                )
+                                .clipped()
+                                .overlay(
+                                    VariableBlurView(maxBlurRadius: 94, direction: .blurredBottomClearTop, startOffset: 0.75)
+                                )
+                                .mask(
+                                    LinearGradient(
+                                        stops: [
+                                            .init(color: .white, location: 0.90),
+                                            .init(color: .clear, location: 1.0)
+                                        ],
+                                        startPoint: .top,
+                                        endPoint: .bottom
                                     )
-                                    .clipped()
-                                    .blur(radius: 94)
-                                    .mask(
-                                        LinearGradient(
-                                            stops: [
-                                                .init(color: .white, location: 0.90),
-                                                .init(color: .clear, location: 1.0)
-                                            ],
-                                            startPoint: .top,
-                                            endPoint: .bottom
-                                        )
-                                    )
-                                
-                                // 2. Sharp Image (fades out first to reveal the blur)
-                                Color.clear
-                                    .overlay(
-                                        image
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
-                                    )
-                                    .clipped()
-                                    .mask(
-                                        LinearGradient(
-                                            stops: [
-                                                .init(color: .white, location: 0.75),
-                                                .init(color: .clear, location: 0.90)
-                                            ],
-                                            startPoint: .top,
-                                            endPoint: .bottom
-                                        )
-                                    )
-                            }
+                                )
                         } else {
                             Rectangle().fill(Color.clear)
                         }

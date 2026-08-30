@@ -90,7 +90,7 @@ struct FeedContentView: View {
                         .buttonStyle(PlainButtonStyle())
                     }
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, 12)
                 .padding(.top, 80)
                 .padding(.bottom, 120) // Space for TabBar
             }
@@ -154,9 +154,9 @@ struct ArticleRowView: View {
                 cardContent(image: nil)
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 32, style: .continuous)
+            RoundedRectangle(cornerRadius: 42, style: .continuous)
                 .stroke(Color(red: 223/255, green: 223/255, blue: 223/255), lineWidth: 0.5)
         )
         .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)

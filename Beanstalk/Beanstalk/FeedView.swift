@@ -140,51 +140,64 @@ struct ArticleRowView: View {
     let article: Article
     
     var body: some View {
+        Group {
+            if let url = article.thumbnailURL {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        cardContent(image: image)
+                    default:
+                        cardContent(image: nil)
+                    }
+                }
+            } else {
+                cardContent(image: nil)
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
+        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+    }
+    
+    @ViewBuilder
+    private func cardContent(image: Image?) -> some View {
         VStack(spacing: 0) {
             // Thumbnail Section
             Color.clear
                 .frame(height: 280)
                 .overlay(
                     Group {
-                        if let url = article.thumbnailURL {
-                            AsyncImage(url: url) { phase in
-                                switch phase {
-                                case .success(let image):
-                                    ZStack {
-                                        // 1. Opaque Blurred Image (creates the progressive blur effect)
-                                        image
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
-                                            .blur(radius: 24)
-                                            .mask(
-                                                LinearGradient(
-                                                    stops: [
-                                                        .init(color: .white, location: 0.95),
-                                                        .init(color: .clear, location: 1.0)
-                                                    ],
-                                                    startPoint: .top,
-                                                    endPoint: .bottom
-                                                )
-                                            )
-                                        
-                                        // 2. Sharp Image (fades out first to reveal the blur)
-                                        image
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
-                                            .mask(
-                                                LinearGradient(
-                                                    stops: [
-                                                        .init(color: .white, location: 0.85),
-                                                        .init(color: .clear, location: 0.95)
-                                                    ],
-                                                    startPoint: .top,
-                                                    endPoint: .bottom
-                                                )
-                                            )
-                                    }
-                                default:
-                                    Rectangle().fill(Color.clear)
-                                }
+                        if let image = image {
+                            ZStack {
+                                // 1. Opaque Blurred Image (creates the progressive blur effect)
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .blur(radius: 24)
+                                    .mask(
+                                        LinearGradient(
+                                            stops: [
+                                                .init(color: .white, location: 0.95),
+                                                .init(color: .clear, location: 1.0)
+                                            ],
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        )
+                                    )
+                                
+                                // 2. Sharp Image (fades out first to reveal the blur)
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .mask(
+                                        LinearGradient(
+                                            stops: [
+                                                .init(color: .white, location: 0.85),
+                                                .init(color: .clear, location: 0.95)
+                                            ],
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        )
+                                    )
                             }
                         } else {
                             Rectangle().fill(Color.clear)
@@ -235,22 +248,16 @@ struct ArticleRowView: View {
             ZStack {
                 Color(red: 245/255, green: 245/255, blue: 245/255) // #F5F5F5
                 
-                if let url = article.thumbnailURL {
-                    AsyncImage(url: url) { phase in
-                        if case .success(let image) = phase {
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        }
-                    }
-                    .blur(radius: 94)
-                    .opacity(0.26)
+                if let image = image {
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .blur(radius: 24)
+                        .opacity(0.26)
                 }
             }
             .clipped()
         )
-        .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
-        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
     }
 }
 

@@ -23,7 +23,12 @@ struct FeedView: View {
     
     var body: some View {
         NavigationStack {
-            UnionTabView(selection: $selectedTab, tabs: [.home, .search, .saved, .profile], minimizeProgress: minimizeProgress) {
+            UnionTabView(
+                selection: $selectedTab, 
+                tabs: [.home, .search, .saved, .profile], 
+                minimizeProgress: minimizeProgress,
+                hideOffset: selectedArticle != nil ? 100 : 0
+            ) {
                 FeedContentView(animationNamespace: animationNamespace, minimizeProgress: $minimizeProgress, selectedArticle: $selectedArticle, heroAnimation: heroAnimation).unionTab(MainTab.home)
                 
                 Color.appBackground.ignoresSafeArea()
@@ -108,7 +113,7 @@ struct FeedContentView: View {
                             ArticleRowView(article: article, animation: heroAnimation, isExpanded: selectedArticle?.id == article.id)
                         }
                         .buttonStyle(PlainButtonStyle())
-                        .opacity(selectedArticle?.id == article.id ? 0 : 1)
+                        .opacity(selectedArticle != nil ? 0 : 1)
                     }
                 }
                 .padding(.horizontal, 12)

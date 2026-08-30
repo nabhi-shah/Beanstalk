@@ -100,7 +100,8 @@ struct ArticleDetailView: View {
                                 selectedArticle = nil
                             }
                         }) {
-                            Image(systemName: "chevron.left")
+                            Image("CaretLeft")
+                                .renderingMode(.template)
                                 .font(.system(size: 16, weight: .bold))
                                 .foregroundColor(.textDark)
                                 .frame(width: 44, height: 44)
@@ -129,7 +130,8 @@ struct ArticleDetailView: View {
                     HStack {
                         Spacer()
                         Button(action: {}) {
-                            Image(systemName: "pencil")
+                            Image("PencilSimpleLine")
+                                .renderingMode(.template)
                                 .font(.system(size: 20, weight: .semibold))
                                 .foregroundColor(.textSecondary)
                                 .frame(width: 56, height: 56)

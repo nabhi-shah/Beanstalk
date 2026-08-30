@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 enum MainTab: Hashable {
     case home, search, saved, profile

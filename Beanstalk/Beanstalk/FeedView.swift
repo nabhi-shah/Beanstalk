@@ -169,9 +169,13 @@ struct ArticleRowView: View {
                         if let image = image {
                             ZStack {
                                 // 1. Opaque Blurred Image (creates the progressive blur effect)
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
+                                Color.clear
+                                    .overlay(
+                                        image
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                    )
+                                    .clipped()
                                     .blur(radius: 24)
                                     .mask(
                                         LinearGradient(
@@ -185,9 +189,13 @@ struct ArticleRowView: View {
                                     )
                                 
                                 // 2. Sharp Image (fades out first to reveal the blur)
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
+                                Color.clear
+                                    .overlay(
+                                        image
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                    )
+                                    .clipped()
                                     .mask(
                                         LinearGradient(
                                             stops: [

@@ -73,6 +73,8 @@ struct FeedContentView: View {
     var animationNamespace: Namespace.ID
     @Binding var minimizeProgress: Double
     @State private var lastOffset: CGFloat = 0
+    @State private var selectedArticle: Article?
+    @Namespace private var heroAnimation
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -86,10 +88,15 @@ struct FeedContentView: View {
                 
                 LazyVStack(spacing: 16) {
                     ForEach(MockData.articles) { article in
-                        NavigationLink(destination: ArticleDetailView(article: article)) {
-                            ArticleRowView(article: article)
+                        Button(action: {
+                            withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                                selectedArticle = article
+                            }
+                        }) {
+                            ArticleRowView(article: article, animation: heroAnimation, isExpanded: selectedArticle?.id == article.id)
                         }
                         .buttonStyle(PlainButtonStyle())
+                        .opacity(selectedArticle?.id == article.id ? 0 : 1)
                     }
                 }
                 .padding(.horizontal, 12)
@@ -135,11 +142,22 @@ struct FeedContentView: View {
                 Spacer()
             }
         }
+        .overlay(
+            Group {
+                if let selectedArticle = selectedArticle {
+                    ArticleDetailView(article: selectedArticle, animation: heroAnimation, selectedArticle: $selectedArticle)
+                        .zIndex(100)
+                        .transition(.identity) // We rely on matchedGeometryEffect for transitions
+                }
+            }
+        )
     }
 }
 
 struct ArticleRowView: View {
     let article: Article
+    var animation: Namespace.ID
+    var isExpanded: Bool = false
     
     var body: some View {
         Group {
@@ -164,6 +182,7 @@ struct ArticleRowView: View {
                 .stroke(Color(red: 223/255, green: 223/255, blue: 223/255), lineWidth: 0.5)
         )
         .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+        .matchedGeometryEffect(id: "card-\(article.id)", in: animation)
     }
     
     @ViewBuilder
@@ -185,6 +204,7 @@ struct ArticleRowView: View {
                         }
                     }
                 )
+                .matchedGeometryEffect(id: "background-\(article.id)", in: animation)
             
             // Content Section
             VStack(alignment: .leading, spacing: 12) {

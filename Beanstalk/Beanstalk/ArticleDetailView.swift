@@ -1,133 +1,142 @@
 import SwiftUI
+import Glur
 
 struct ArticleDetailView: View {
     let article: Article
-    @Environment(\.dismiss) private var dismiss
+    var animation: Namespace.ID
+    @Binding var selectedArticle: Article?
     
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                // Header Image
-                if let url = article.thumbnailURL {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .empty:
-                            Rectangle().fill(Color.secondaryBackground)
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        case .failure:
-                            Rectangle().fill(Color.secondaryBackground)
-                        @unknown default:
-                            EmptyView()
+        ZStack(alignment: .bottom) {
+            // Background Image
+            Color.clear
+                .overlay(
+                    GeometryReader { proxy in
+                        if let url = article.thumbnailURL {
+                            AsyncImage(url: url) { phase in
+                                switch phase {
+                                case .success(let image):
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: proxy.size.width, height: proxy.size.height)
+                                        .clipped()
+                                        .glur(radius: 24.0, offset: 0.72, interpolation: 0.28, direction: .down)
+                                default:
+                                    Color(red: 245/255, green: 245/255, blue: 245/255)
+                                }
+                            }
+                        } else {
+                            Color(red: 245/255, green: 245/255, blue: 245/255)
                         }
                     }
-                    .frame(height: 300)
-                    .clipped()
-                } else {
-                    Rectangle()
-                        .fill(Color.secondaryBackground)
-                        .frame(height: 300)
-                        .overlay(
-                            Text(article.publication)
-                                .font(.custom("InclusiveSans-Regular", size: 32))
-                                .foregroundColor(.textSecondary.opacity(0.3))
-                        )
-                }
-                
-                VStack(alignment: .leading, spacing: 24) {
-                    // Meta Info
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text(article.publication)
-                                .font(.custom("InclusiveSans-Regular", size: 14))
-                                .foregroundColor(.brandGreen)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(Color.brandGreen.opacity(0.1))
-                                .clipShape(Capsule())
-                            
-                            Spacer()
-                            
-                            Text(article.date)
-                                .font(.custom("InclusiveSans-Regular", size: 14))
-                                .foregroundColor(.textSecondary)
-                        }
-                        
-                        Text(article.title)
-                            .font(.custom("InclusiveSans-Regular", size: 26))
-                            .foregroundColor(.textDark)
-                            .fixedSize(horizontal: false, vertical: true)
-                        
-                        if !article.author.isEmpty {
-                            Text("By \(article.author)")
-                                .font(.custom("InclusiveSans-Regular", size: 16))
-                                .foregroundColor(.textSecondary)
-                        }
-                    }
+                )
+                .matchedGeometryEffect(id: "background-\(article.id)", in: animation)
+            
+            // Content Section
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 12) {
+                    Image(article.publication)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 32, height: 32)
+                        .background(Color.white)
+                        .clipShape(Circle())
+                        .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
                     
-                    // AI Summary Card
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "sparkles")
-                                .foregroundColor(.brandGreen)
-                            Text("AI Summary")
-                                .font(.custom("InclusiveSans-Regular", size: 16))
-                                .foregroundColor(.textDark)
-                        }
-                        
-                        Text(article.aiSummary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(article.publication)
                             .font(.custom("InclusiveSans-Regular", size: 16))
                             .foregroundColor(.textDark)
-                            .lineSpacing(4)
+                        
+                        if !article.author.isEmpty {
+                            Text(article.author)
+                                .font(.custom("InclusiveSans-Regular", size: 14))
+                                .foregroundColor(.textSecondary)
+                        }
                     }
-                    .padding(20)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.white.opacity(0.5))
-                    .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .glassEffect(.regular.tint(Color.brandGreen.opacity(0.1)))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .stroke(Color.brandGreen.opacity(0.3), lineWidth: 1)
-                    )
-                    
-                    Divider()
-                    
-                    // Article Content
-                    Text(article.content)
-                        .font(.custom("InclusiveSans-Regular", size: 18))
-                        .foregroundColor(.textDark)
-                        .lineSpacing(8)
                 }
-                .padding(24)
-                .background(Color.appBackground)
-                .cornerRadius(32, corners: [.topLeft, .topRight])
-                .offset(y: -32) // Pull up over the image
-                .padding(.bottom, -32) // Adjust padding so scrollview isn't too long
+                
+                Text(article.title)
+                    .font(.custom("InclusiveSans-Regular", size: 18))
+                    .foregroundColor(.textDark)
+                    .multilineTextAlignment(.leading)
+                    
+                Text(article.aiSummary)
+                    .font(.custom("InclusiveSans-Regular", size: 16))
+                    .foregroundColor(.textSecondary)
+                    .lineSpacing(4)
+                    .padding(.top, 8)
             }
-        }
-        .background(Color.appBackground.ignoresSafeArea())
-        .ignoresSafeArea(edges: .top)
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: { dismiss() }) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.textDark)
-                        .padding(10)
-                        .background(Color.white.opacity(0.8))
-                        .clipShape(Circle())
-                        .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
-                }
-            }
-        }
-    }
-}
+            .padding(24)
+            .padding(.top, 48)
+            .padding(.bottom, 64)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                LinearGradient(
+                    stops: [
+                        .init(color: .clear, location: 0.0),
+                        .init(color: Color(red: 245/255, green: 245/255, blue: 245/255).opacity(0.85), location: 0.2),
+                        .init(color: Color(red: 245/255, green: 245/255, blue: 245/255).opacity(1.0), location: 1.0)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            .matchedGeometryEffect(id: "card-\(article.id)", in: animation)
 
-#Preview {
-    ArticleDetailView(article: MockData.articles[0])
+            // Top Buttons
+            VStack {
+                HStack {
+                    Button(action: { 
+                        withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                            selectedArticle = nil
+                        }
+                    }) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.textDark)
+                            .frame(width: 44, height: 44)
+                            .background(Color(red: 245/255, green: 245/255, blue: 245/255).opacity(0.7))
+                            .clipShape(Circle())
+                    }
+                    
+                    Spacer()
+                    
+                    Button(action: { }) {
+                        Image(systemName: "bookmark")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.textDark)
+                            .frame(width: 44, height: 44)
+                            .background(Color(red: 245/255, green: 245/255, blue: 245/255).opacity(0.7))
+                            .clipShape(Circle())
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 64)
+                
+                Spacer()
+                
+                // Bottom FAB
+                HStack {
+                    Spacer()
+                    Button(action: {}) {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(.textSecondary)
+                            .frame(width: 56, height: 56)
+                            .background(Color(red: 245/255, green: 245/255, blue: 245/255))
+                            .clipShape(Circle())
+                            .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 24)
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
+        .padding(.top, 44) // Status bar
+        .padding(.bottom, 34) // Home indicator
+        .ignoresSafeArea()
+    }
 }

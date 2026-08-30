@@ -162,6 +162,11 @@ struct ArticleRowView: View {
                         }
                     }
                 )
+                .overlay(
+                    VariableBlurView(maxBlurRadius: 24, direction: .blurredBottomClearTop)
+                        .frame(height: 42),
+                    alignment: .bottom
+                )
                 .clipped()
                 .mask(
                     LinearGradient(
@@ -224,7 +229,7 @@ struct ArticleRowView: View {
                                 .aspectRatio(contentMode: .fill)
                         }
                     }
-                    .blur(radius: 24)
+                    .blur(radius: 94)
                     .opacity(0.26)
                 }
             }

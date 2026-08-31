@@ -144,7 +144,7 @@ struct ArticleDetailView: View {
                                 }
                                 .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.1)))
                                 .background(
-                                    Circle().glassEffect(.regular, in: .circle)
+                                    Circle().glassEffect(.regular.tint(.white.opacity(0.6)), in: .circle)
                                 )
                                 
                                 Spacer()
@@ -161,11 +161,11 @@ struct ArticleDetailView: View {
                                 }
                                 .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.1)))
                                 .background(
-                                    Circle().glassEffect(.regular, in: .circle)
+                                    Circle().glassEffect(.regular.tint(.white.opacity(0.6)), in: .circle)
                                 )
                             }
                             .padding(.horizontal, 24)
-                            .padding(.top, 16)
+                            .padding(.top, 24)
                             
                             Spacer()
                             

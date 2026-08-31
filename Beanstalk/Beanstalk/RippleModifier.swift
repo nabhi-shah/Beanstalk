@@ -5,26 +5,44 @@ struct RippleModifier: ViewModifier {
     var touchLocation: CGPoint?
     var isPressed: Bool
     
-    @State private var progress: CGFloat = 1.0
+    @State private var scale: CGFloat = 0.0
+    @State private var opacity: Double = 0.0
+    @State private var isAnimating = false
     
     func body(content: Content) -> some View {
         content
-            .visualEffect { viewContent, geometryProxy in
-                let center = touchLocation ?? CGPoint(x: geometryProxy.size.width / 2, y: geometryProxy.size.height / 2)
-                return viewContent.colorEffect(
-                    ShaderLibrary.default.lightRipple(
-                        .float2(center),
-                        .float(progress),
-                        .float2(geometryProxy.size),
-                        .color(rippleColor)
-                    )
-                )
-            }
+            .overlay(
+                GeometryReader { geo in
+                    let center = touchLocation ?? CGPoint(x: geo.size.width / 2, y: geo.size.height / 2)
+                    // The radius must cover the furthest corner from any touch point. 
+                    // 1.5x the maximum dimension guarantees coverage.
+                    let radius = max(geo.size.width, geo.size.height) * 1.5
+                    
+                    if isAnimating {
+                        Circle()
+                            .fill(rippleColor)
+                            .frame(width: radius * 2, height: radius * 2)
+                            .position(center)
+                            .scaleEffect(scale)
+                            .opacity(opacity)
+                    }
+                }
+                .clipped() // Ensure the ripple doesn't overflow the view's bounds
+                .allowsHitTesting(false)
+            )
             .onChange(of: isPressed) { oldValue, newValue in
                 if newValue {
-                    progress = 0.0
-                    withAnimation(.easeOut(duration: 1.5)) {
-                        progress = 1.0
+                    isAnimating = true
+                    scale = 0.0
+                    opacity = 1.0
+                    
+                    withAnimation(.easeOut(duration: 0.6)) {
+                        scale = 1.0
+                        opacity = 0.0
+                    }
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                        isAnimating = false
                     }
                 }
             }

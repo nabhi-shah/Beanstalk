@@ -148,6 +148,8 @@ struct FeedContentView: View {
             .ignoresSafeArea()
 
             ProgressiveBlurView(height: 120, edge: .top)
+                .opacity(selectedArticle != nil ? 0 : 1)
+                .animation(.easeInOut(duration: 0.3), value: selectedArticle?.id)
 
             // Custom Header
             HStack {
@@ -162,6 +164,8 @@ struct FeedContentView: View {
                     .padding(.bottom, 8)
                 Spacer()
             }
+            .opacity(selectedArticle != nil ? 0 : 1)
+            .animation(.easeInOut(duration: 0.3), value: selectedArticle?.id)
         }
     }
 }

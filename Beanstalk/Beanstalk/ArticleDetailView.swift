@@ -140,12 +140,12 @@ struct ArticleDetailView: View {
                                         .frame(width: 20, height: 20)
                                         .foregroundColor(.textDark)
                                         .frame(width: 44, height: 44)
+                                        .background(
+                                            Circle().glassEffect(.regular.tint(.white.opacity(0.6)), in: .circle)
+                                        )
                                         .contentShape(Circle())
                                 }
                                 .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.1)))
-                                .background(
-                                    Circle().glassEffect(.regular.tint(.white.opacity(0.6)), in: .circle)
-                                )
                                 
                                 Spacer()
                                 
@@ -157,12 +157,12 @@ struct ArticleDetailView: View {
                                         .frame(width: 20, height: 20)
                                         .foregroundColor(.textDark)
                                         .frame(width: 44, height: 44)
+                                        .background(
+                                            Circle().glassEffect(.regular.tint(.white.opacity(0.6)), in: .circle)
+                                        )
                                         .contentShape(Circle())
                                 }
                                 .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.1)))
-                                .background(
-                                    Circle().glassEffect(.regular.tint(.white.opacity(0.6)), in: .circle)
-                                )
                             }
                             .padding(.horizontal, 24)
                             .padding(.top, 24)
@@ -181,12 +181,12 @@ struct ArticleDetailView: View {
                                         .frame(width: 24, height: 24)
                                         .foregroundColor(.textSecondary)
                                         .frame(width: 56, height: 56)
+                                        .background(
+                                            Circle().glassEffect(.regular.tint(.white.opacity(0.6)), in: .circle)
+                                        )
                                         .contentShape(Circle())
                                 }
                                 .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.1)))
-                                .background(
-                                    Circle().glassEffect(.regular, in: .circle)
-                                )
                                 .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
                             }
                             .padding(.horizontal, 24)

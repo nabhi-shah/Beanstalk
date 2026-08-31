@@ -178,6 +178,8 @@ struct ArticleRowView: View {
     var onToggle: () -> Void
     
     @State private var showActions: Bool = false
+    @State private var isPressed: Bool = false
+    @State private var touchLocation: CGPoint? = nil
     
     var body: some View {
         VStack(spacing: 12) {
@@ -399,8 +401,20 @@ struct ArticleRowView: View {
                 }
             }
         }
+        .modifier(RippleModifier(rippleColor: Color.black.opacity(0.15), touchLocation: touchLocation, isPressed: isPressed))
+        .background(
+            TouchLocatingView { location in
+                if !isPressed {
+                    touchLocation = location
+                }
+            }
+        )
         .onTapGesture {
             if !isExpanded {
+                isPressed = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    isPressed = false
+                }
                 onToggle()
             }
         }

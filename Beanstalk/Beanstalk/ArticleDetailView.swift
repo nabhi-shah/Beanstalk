@@ -37,7 +37,7 @@ struct ArticleDetailView: View {
                                         .frame(width: cardWidth, height: cardHeight)
                                         .clipped()
                                         .figmaLayerBlur(radius: 94)
-                                        .opacity(0.40)
+                                        .opacity(0.26)
                                 }
                                 }
                             }
@@ -58,7 +58,7 @@ struct ArticleDetailView: View {
                                                         .resizable()
                                                         .aspectRatio(contentMode: .fill)
                                                         .frame(width: geo.size.width, height: geo.size.height)
-                                                        .clipped()
+                                                       
                                                         .progressiveBleedBlur(radius: 24, offset: 0.75, direction: .bottom, steps: 5)
                                                 default:
                                                     Color.clear
@@ -70,7 +70,7 @@ struct ArticleDetailView: View {
                                     }
                                 )
                                 .frame(height: 290)
-                                .clipped()
+                               
                             
                             Spacer(minLength: 0)
                         }
@@ -79,7 +79,7 @@ struct ArticleDetailView: View {
                         
                         // Content Section (Bottom) — scrollable if needed
                         VStack(spacing: 0) {
-                            Spacer(minLength: 290) // Push content strictly below the image area
+                            Color.clear.frame(height: 290) // Push content strictly below the image area
                             
                             VStack(alignment: .leading, spacing: 12) {
                                 HStack(spacing: 12) {
@@ -116,20 +116,11 @@ struct ArticleDetailView: View {
                                     .padding(.top, 8)
                             }
                             .padding(24)
-                            .padding(.top, 48)
+                            .padding(.top, 24)
                             .padding(.bottom, 64)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(
-                                LinearGradient(
-                                    stops: [
-                                        .init(color: .clear, location: 0.0),
-                                        .init(color: Color(red: 245/255, green: 245/255, blue: 245/255).opacity(0.85), location: 0.2),
-                                        .init(color: Color(red: 245/255, green: 245/255, blue: 245/255).opacity(1.0), location: 1.0)
-                                    ],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
+                            
+                            Spacer(minLength: 0)
                         }
                         .frame(width: cardWidth, height: cardHeight)
                         .zIndex(1)

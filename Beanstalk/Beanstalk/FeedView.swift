@@ -404,7 +404,7 @@ struct ArticleRowView: View {
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .figmaLayerBlur(radius: 94)
+                        .figmaLayerBlur(radius: 24)
                         .opacity(0.26)
                 }
             }

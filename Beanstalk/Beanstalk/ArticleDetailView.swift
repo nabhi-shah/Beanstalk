@@ -20,7 +20,7 @@ struct ArticleDetailView: View {
                 // White background behind the modal
                 Color.white
                 
-                VStack(spacing: 0) {
+                VStack(spacing: 8) {
                     ZStack(alignment: .top) {
                         // Base background: #F5F5F5 + blurred image at 26% opacity covering entire card
                         ZStack {
@@ -204,28 +204,26 @@ struct ArticleDetailView: View {
                     .frame(width: cardWidth, height: cardHeight)
                     .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
                     .matchedGeometryEffect(id: "card-\(article.id)", in: animation)
-                    .overlay(alignment: .bottom) {
-                        // Pagination dots and chat icon
-                        HStack(spacing: 8) {
-                            Circle()
-                                .fill(Color(red: 40/255, green: 40/255, blue: 40/255))
-                                .frame(width: 8, height: 8)
-                            Circle()
-                                .fill(Color.gray)
-                                .frame(width: 8, height: 8)
-                            Image("chat-teardrop-dots-fill")
-                                .renderingMode(.template)
-                                .resizable()
-                                .scaledToFit()
-                                .foregroundColor(.gray)
-                                .frame(width: 14, height: 14)
-                        }
-                        .padding(.bottom, 24)
+                    
+                    // Pagination dots and chat icon
+                    HStack(spacing: 8) {
+                        Circle()
+                            .fill(Color(red: 40/255, green: 40/255, blue: 40/255))
+                            .frame(width: 8, height: 8)
+                        Circle()
+                            .fill(Color.gray)
+                            .frame(width: 8, height: 8)
+                        Image("chat-teardrop-dots-fill")
+                            .renderingMode(.template)
+                            .resizable()
+                            .scaledToFit()
+                            .foregroundColor(.gray)
+                            .frame(width: 14, height: 14)
                     }
+                    .frame(height: 34) // dots height sitting in the safe area
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(.top, safeTop)
-                .padding(.bottom, safeBottom)
             }
         }
         .ignoresSafeArea()

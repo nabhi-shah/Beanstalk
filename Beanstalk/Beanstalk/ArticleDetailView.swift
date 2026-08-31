@@ -7,169 +7,229 @@ struct ArticleDetailView: View {
     @Binding var selectedArticle: Article?
     
     var body: some View {
-        ZStack {
-            // White background behind the modal
-            Color.white.ignoresSafeArea()
+        GeometryReader { geo in
+            let windowInsets = UIApplication.shared.connectedScenes
+                .compactMap { $0 as? UIWindowScene }
+                .first?.windows.first?.safeAreaInsets
+            let safeTop = max(windowInsets?.top ?? geo.safeAreaInsets.top, 20)
+            let safeBottom = max(windowInsets?.bottom ?? geo.safeAreaInsets.bottom, 20)
+            let dotsHeight: CGFloat = 34
+            let cardGap: CGFloat = 16
+            let cardWidth = geo.size.width - 24 // 12px padding on each side
+            let cardHeight = geo.size.height - safeTop - safeBottom - dotsHeight - cardGap
             
-            ZStack(alignment: .top) { // Align to top so image anchors to top
-                // Base background for the expanded card (covers the bottom text area)
-                ZStack {
-                    Color(red: 245/255, green: 245/255, blue: 245/255)
-                    
-                    if let url = article.thumbnailURL {
-                        AsyncImage(url: url) { phase in
-                            if let image = phase.image {
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .blur(radius: 94)
-                                    .opacity(0.26)
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                    .clipped()
-                            }
-                        }
-                    }
-                }
+            ZStack {
+                // White background behind the modal
+                Color.white
                 
-                // Background Image
-                Color.clear
-                    .overlay(
-                        GeometryReader { proxy in
+                VStack(spacing: 0) {
+                    ZStack(alignment: .top) {
+                        // Base background: #F5F5F5 + blurred image at 26% opacity covering entire card
+                        ZStack {
+                            Color(red: 245/255, green: 245/255, blue: 245/255)
+                            
                             if let url = article.thumbnailURL {
                                 AsyncImage(url: url) { phase in
-                                    switch phase {
-                                    case .success(let image):
+                                    if let image = phase.image {
                                         image
                                             .resizable()
                                             .aspectRatio(contentMode: .fill)
-                                            .frame(width: proxy.size.width, height: proxy.size.height)
-                                            .clipped()
-                                            .glur(radius: 24.0, offset: 0.72, interpolation: 0.28, direction: .down)
-                                    default:
-                                        Color.clear
+                                            .blur(radius: 6)
+                                            .opacity(0.26)
                                     }
                                 }
-                            } else {
-                                Color.clear
                             }
                         }
-                    )
-                    .frame(height: 420) // Match ArticleRowView minHeight to prevent zoom
-                    .matchedGeometryEffect(id: "background-\(article.id)", in: animation)
-                
-                // Content Section (Bottom)
-                VStack {
-                    Spacer()
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack(spacing: 12) {
-                            Image(article.publication)
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 32, height: 32)
-                                .background(Color.white)
-                                .clipShape(Circle())
-                                .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
+                        .frame(width: cardWidth, height: cardHeight)
+                        .clipped()
+                        
+                        // Sharp image at top, fixed height
+                        VStack(spacing: 0) {
+                            Color.clear
+                                .overlay(
+                                    GeometryReader { geo in
+                                        if let url = article.thumbnailURL {
+                                            AsyncImage(url: url) { phase in
+                                                switch phase {
+                                                case .success(let image):
+                                                    image
+                                                        .resizable()
+                                                        .aspectRatio(contentMode: .fill)
+                                                        .frame(width: geo.size.width, height: geo.size.height)
+                                                        .clipped()
+                                                        .padding(94)
+                                                        .glur(radius: 94, offset: 0.75, interpolation: 0.25, direction: .down)
+                                                        .padding(-94)
+                                                default:
+                                                    Color.clear
+                                                }
+                                            }
+                                        } else {
+                                            Color.clear
+                                        }
+                                    }
+                                )
+                                .frame(height: 240)
+                                .clipped()
+                                .matchedGeometryEffect(id: "background-\(article.id)", in: animation)
                             
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(article.publication)
-                                    .font(.custom("InclusiveSans-Regular", size: 16))
-                                    .foregroundColor(.textDark)
-                                
-                                if !article.author.isEmpty {
-                                    Text(article.author)
-                                        .font(.custom("InclusiveSans-Regular", size: 14))
-                                        .foregroundColor(.textSecondary)
+                            Spacer(minLength: 0)
+                        }
+                        .frame(width: cardWidth, height: cardHeight)
+                        .zIndex(0)
+                        
+                        // Content Section (Bottom) — scrollable if needed
+                        VStack(spacing: 0) {
+                            Spacer(minLength: 240) // Push content strictly below the image area
+                            
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack(spacing: 12) {
+                                    Image(article.publication)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: 32, height: 32)
+                                        .background(Color.white)
+                                        .clipShape(Circle())
+                                        .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
+                                    
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(article.publication)
+                                            .font(.custom("InclusiveSans-Regular", size: 16))
+                                            .foregroundColor(.textDark)
+                                        
+                                        if !article.author.isEmpty {
+                                            Text(article.author)
+                                                .font(.custom("InclusiveSans-Regular", size: 14))
+                                                .foregroundColor(.textSecondary)
+                                        }
+                                    }
                                 }
+                                
+                                Text(article.title)
+                                    .font(.custom("InclusiveSans-Regular", size: 18))
+                                    .foregroundColor(.textDark)
+                                    .multilineTextAlignment(.leading)
+                                    
+                                Text(article.aiSummary)
+                                    .font(.custom("InclusiveSans-Regular", size: 16))
+                                    .foregroundColor(.textSecondary)
+                                    .lineSpacing(4)
+                                    .padding(.top, 8)
                             }
+                            .padding(24)
+                            .padding(.top, 48)
+                            .padding(.bottom, 64)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(
+                                LinearGradient(
+                                    stops: [
+                                        .init(color: .clear, location: 0.0),
+                                        .init(color: Color(red: 245/255, green: 245/255, blue: 245/255).opacity(0.85), location: 0.2),
+                                        .init(color: Color(red: 245/255, green: 245/255, blue: 245/255).opacity(1.0), location: 1.0)
+                                    ],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
                         }
+                        .frame(width: cardWidth, height: cardHeight)
+                        .zIndex(1)
                         
-                        Text(article.title)
-                            .font(.custom("InclusiveSans-Regular", size: 18))
-                            .foregroundColor(.textDark)
-                            .multilineTextAlignment(.leading)
+                        // Top Buttons
+                        VStack {
+                            HStack {
+                                Button(action: { 
+                                    withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                                        selectedArticle = nil
+                                    }
+                                }) {
+                                    Image("CaretLeft")
+                                        .renderingMode(.template)
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 20, height: 20)
+                                        .foregroundColor(.textDark)
+                                        .frame(width: 44, height: 44)
+                                        .contentShape(Circle())
+                                }
+                                .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.1)))
+                                .background(
+                                    Circle().glassEffect(.regular, in: .circle)
+                                )
+                                
+                                Spacer()
+                                
+                                Button(action: { }) {
+                                    Image("bookmark-simple")
+                                        .renderingMode(.template)
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 20, height: 20)
+                                        .foregroundColor(.textDark)
+                                        .frame(width: 44, height: 44)
+                                        .contentShape(Circle())
+                                }
+                                .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.1)))
+                                .background(
+                                    Circle().glassEffect(.regular, in: .circle)
+                                )
+                            }
+                            .padding(.horizontal, 24)
+                            .padding(.top, 16)
                             
-                        Text(article.aiSummary)
-                            .font(.custom("InclusiveSans-Regular", size: 16))
-                            .foregroundColor(.textSecondary)
-                            .lineSpacing(4)
-                            .padding(.top, 8)
-                    }
-                    .padding(24)
-                    .padding(.top, 48)
-                    .padding(.bottom, 64)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(
-                        LinearGradient(
-                            stops: [
-                                .init(color: .clear, location: 0.0),
-                                .init(color: Color(red: 245/255, green: 245/255, blue: 245/255).opacity(0.85), location: 0.2),
-                                .init(color: Color(red: 245/255, green: 245/255, blue: 245/255).opacity(1.0), location: 1.0)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                }
-                
-                // Top Buttons
-                VStack {
-                    HStack {
-                        Button(action: { 
-                            withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-                                selectedArticle = nil
-                            }
-                        }) {
-                            Image("CaretLeft")
-                                .renderingMode(.template)
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(.textDark)
-                                .frame(width: 44, height: 44)
-                                .background(Color(red: 245/255, green: 245/255, blue: 245/255).opacity(0.7))
-                                .clipShape(Circle())
-                        }
-                        
-                        Spacer()
-                        
-                        Button(action: { }) {
-                            Image("bookmark")
-                                .renderingMode(.template)
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(.textDark)
-                                .frame(width: 44, height: 44)
-                                .background(Color(red: 245/255, green: 245/255, blue: 245/255).opacity(0.7))
-                                .clipShape(Circle())
-                        }
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.top, 64)
-                    
-                    Spacer()
-                    
-                    // Bottom FAB
-                    HStack {
-                        Spacer()
-                        Button(action: {}) {
-                            Image("PencilSimpleLine")
-                                .renderingMode(.template)
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundColor(.textSecondary)
-                                .frame(width: 56, height: 56)
-                                .background(Color(red: 245/255, green: 245/255, blue: 245/255))
-                                .clipShape(Circle())
+                            Spacer()
+                            
+                            // Bottom FAB Area
+                            HStack {
+                                Spacer()
+                                
+                                Button(action: {}) {
+                                    Image("PencilSimpleLine")
+                                        .renderingMode(.template)
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 24, height: 24)
+                                        .foregroundColor(.textSecondary)
+                                        .frame(width: 56, height: 56)
+                                        .contentShape(Circle())
+                                }
+                                .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.1)))
+                                .background(
+                                    Circle().glassEffect(.regular, in: .circle)
+                                )
                                 .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+                            }
+                            .padding(.horizontal, 24)
+                            .padding(.bottom, 24)
                         }
+                        .frame(width: cardWidth, height: cardHeight)
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 24)
+                    .frame(width: cardWidth, height: cardHeight)
+                    .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
+                    .matchedGeometryEffect(id: "card-\(article.id)", in: animation)
+                    
+                    // Pagination dots and chat icon
+                    HStack(spacing: 8) {
+                        Circle()
+                            .fill(Color(red: 40/255, green: 40/255, blue: 40/255))
+                            .frame(width: 8, height: 8)
+                        Circle()
+                            .fill(Color.gray)
+                            .frame(width: 8, height: 8)
+                        Image("chat-teardrop-dots-fill")
+                            .renderingMode(.template)
+                            .resizable()
+                            .scaledToFit()
+                            .foregroundColor(.gray)
+                            .frame(width: 14, height: 14)
+                    }
+                    .frame(height: dotsHeight)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.top, safeTop + cardGap)
+                .padding(.bottom, safeBottom)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
-            .matchedGeometryEffect(id: "card-\(article.id)", in: animation)
-            .padding(.top, 44) // Status bar
-            .padding(.bottom, 34) // Home indicator
-            .padding(.horizontal, 12)
-            .ignoresSafeArea()
         }
+        .ignoresSafeArea()
     }
 }

@@ -127,7 +127,7 @@ struct ContentView: View {
             .buttonStyle(RippleButtonStyle(rippleColor: Color.white.opacity(0.4)))
             .background(
                 Capsule()
-                    .glassEffect(.regular.tint(Color.brandGreen.opacity(0.4)), in: .capsule)
+                    .glassEffect(.regular.tint(Color.brandGreen.opacity(0.6)), in: .capsule)
             )
             .padding(.top, 8)
 
@@ -225,11 +225,13 @@ struct FluidBridgeModifier: ViewModifier, Animatable {
     func body(content: Content) -> some View {
         let sinProgress = sin(progress * .pi)
         
-        // Fluid gets thinner as it stretches
-        let currentHeight = tabHeight * (1 - sinProgress * 0.6)
+        let targetCircleSize = tabHeight / 2
         
-        // Fluid stretches across the gap
-        let currentWidth = tabWidth + (sinProgress * spacing * 2.5)
+        // Height shrinks from full tab height down to half size
+        let currentHeight = tabHeight - (tabHeight - targetCircleSize) * sinProgress
+        
+        // Width shrinks from full tab width down to the same half size
+        let currentWidth = tabWidth - (tabWidth - targetCircleSize) * sinProgress
         
         let startCenterX = tabWidth / 2
         let endCenterX = tabWidth + spacing + tabWidth / 2

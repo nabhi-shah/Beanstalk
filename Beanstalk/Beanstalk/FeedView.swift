@@ -184,83 +184,117 @@ struct ArticleRowView: View {
                 cardContent(image: nil)
             }
         }
+         
         .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 42, style: .continuous)
-                .stroke(Color(red: 223/255, green: 223/255, blue: 223/255), lineWidth: 0.5)
-        )
+         .overlay(
+             RoundedRectangle(cornerRadius: 42, style: .continuous)
+                 .stroke(Color(red: 223/255, green: 223/255, blue: 223/255), lineWidth: 0.5)
+         )
         .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
         .matchedGeometryEffect(id: "card-\(article.id)", in: animation, isSource: !isExpanded)
     }
     
     @ViewBuilder
     private func cardContent(image: Image?) -> some View {
-        ZStack(alignment: .bottom) {
-            // Background Image
-            Color.clear
-                .overlay(
-                    GeometryReader { proxy in
-                        if let image = image {
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: proxy.size.width, height: proxy.size.height)
-                                .clipped()
-                                .glur(radius: 24.0, offset: 0.72, interpolation: 0.28, direction: .down)
-                        } else {
-                            Color(red: 245/255, green: 245/255, blue: 245/255) // #F5F5F5
-                        }
-                    }
-                )
-                .matchedGeometryEffect(id: "background-\(article.id)", in: animation, isSource: !isExpanded)
+        ZStack(alignment: .top) {
             
-            // Content Section
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 12) {
-                    // Publication Logo
-                    Image(article.publication)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 32, height: 32)
-                        .background(Color.white)
-                        .clipShape(Circle())
-                        .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
-                    
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(article.publication)
-                            .font(.custom("InclusiveSans-Regular", size: 16))
-                            .foregroundColor(.textDark)
-                        
-                        if !article.author.isEmpty {
-                            Text(article.author)
-                                .font(.custom("InclusiveSans-Regular", size: 14))
-                                .foregroundColor(.textSecondary)
-                        }
+          
+                
+            
+            // 2. Content
+            ZStack(alignment: .top) {
+                // Blurred Image Layer as a separate element, NOT clipped!
+                GeometryReader { proxy in
+                    if let image = image {
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            // 1. Frame it exactly to the text container
+                            .frame(width: proxy.size.width, height: proxy.size.height)
+                            // 2. Clip it so it has a HARD edge exactly at the seam line
+                            
+                            // 3. Apply the un-clamped blur. The blur will take that hard edge at the seam 
+                            // and organically bleed it upwards by 25 points into the top photo!
+                            .clipped()
+                            .figmaLayerBlur(radius: 94)
+                            .opacity(0.40)
                     }
                 }
+                .allowsHitTesting(false).zIndex(1)
                 
-                Text(article.title)
-                    .font(.custom("InclusiveSans-Regular", size: 18))
-                    .foregroundColor(.textDark)
-                    .lineLimit(3)
-                    .multilineTextAlignment(.leading)
+                // Text Content
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(spacing: 12) {
+                        // Publication Logo
+                        Image(article.publication)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 32, height: 32)
+                            .background(Color.white)
+                            .clipShape(Circle())
+                            .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(article.publication)
+                                .font(.custom("InclusiveSans-Regular", size: 16))
+                                .foregroundColor(.textDark)
+                            
+                            if !article.author.isEmpty {
+                                Text(article.author)
+                                    .font(.custom("InclusiveSans-Regular", size: 14))
+                                    .foregroundColor(.textSecondary)
+                            }
+                        }
+                    }
+                    
+                    Text(article.title)
+                        .font(.custom("InclusiveSans-Regular", size: 18))
+                        .foregroundColor(.textDark)
+                        .lineLimit(3)
+                        .multilineTextAlignment(.leading)
+                }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 24)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .zIndex(2) // Ensures text is above the blurred image!
             }
-            .padding(24)
-            .padding(.top, 48) // Extra padding to allow the gradient to fade in above the text
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                LinearGradient(
-                    stops: [
-                        .init(color: .clear, location: 0.0),
-                        .init(color: Color(red: 245/255, green: 245/255, blue: 245/255).opacity(0.74), location: 0.4),
-                        .init(color: Color(red: 245/255, green: 245/255, blue: 245/255).opacity(0.74), location: 1.0)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
+            .padding(.top, 240) // Shift content below the sharp image
+            // Z-Index ensures this entire Content section (and its bleeding blur) renders OVER the top Image
+            .zIndex(0.5)
         }
-        .frame(minHeight: 420)
+        .background(alignment: .top) {
+            if let image = image {
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 290)
+                    .clipped()
+                    .progressiveBleedBlur(radius: 24, offset: 0.75, direction: .bottom, steps: 5)
+            } else {
+                Color.clear.frame(height: 400)
+            }
+        }
+        .background(Color(red: 245/255, green: 245/255, blue: 245/255))
+        .matchedGeometryEffect(id: "background-\(article.id)", in: animation, isSource: !isExpanded)
+    }
+}
+
+// Custom modifier to simulate Figma's un-clamped layer blur
+struct FigmaLayerBlur: ViewModifier {
+    var radius: CGFloat
+    
+    func body(content: Content) -> some View {
+        content
+            .padding(radius * 2)
+            .blur(radius: radius)
+            .padding(-radius * 2)
+    }
+}
+
+extension View {
+    func figmaLayerBlur(radius: CGFloat) -> some View {
+        modifier(FigmaLayerBlur(radius: radius))
     }
 }
 

@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		0A1E706C30448C7600C7B05D /* Glur in Frameworks */ = {isa = PBXBuildFile; productRef = 712F791B3E4F909F06C238DD /* Glur */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		0A6B19913033525E00B75816 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -50,15 +54,11 @@
 		};
 		0A6B19933033525E00B75816 /* BeanstalkTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = BeanstalkTests;
 			sourceTree = "<group>";
 		};
 		0A6B199D3033525E00B75816 /* BeanstalkUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = BeanstalkUITests;
 			sourceTree = "<group>";
 		};
@@ -69,6 +69,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0A1E706C30448C7600C7B05D /* Glur in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

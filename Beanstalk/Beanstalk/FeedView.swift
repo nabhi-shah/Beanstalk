@@ -89,49 +89,54 @@ struct FeedContentView: View {
         ZStack(alignment: .top) {
             Color.appBackground.ignoresSafeArea()
             
-            ScrollView {
-                GeometryReader { proxy in
-                    Color.clear.preference(key: ScrollOffsetKey.self, value: proxy.frame(in: .named("scroll")).minY)
-                }
-                .frame(height: 0)
-                
-                                LazyVStack(spacing: 16) {
-                    ForEach(MockData.articles) { article in
-                        ArticleRowView(
-                            article: article,
-                            isExpanded: selectedArticle?.id == article.id,
-                            onToggle: {
-                                withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-                                    if selectedArticle?.id == article.id {
-                                        selectedArticle = nil
-                                    } else {
-                                        selectedArticle = article
+            ScrollViewReader { scrollProxy in
+                ScrollView {
+                    GeometryReader { proxy in
+                        Color.clear.preference(key: ScrollOffsetKey.self, value: proxy.frame(in: .named("scroll")).minY)
+                    }
+                    .frame(height: 0)
+                    
+                    LazyVStack(spacing: 16) {
+                        ForEach(MockData.articles) { article in
+                            ArticleRowView(
+                                article: article,
+                                isExpanded: selectedArticle?.id == article.id,
+                                onToggle: {
+                                    withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                                        if selectedArticle?.id == article.id {
+                                            selectedArticle = nil
+                                        } else {
+                                            selectedArticle = article
+                                            // Scroll to top of the screen when expanded
+                                            scrollProxy.scrollTo(article.id, anchor: .top)
+                                        }
                                     }
                                 }
-                            }
-                        )
-                        .opacity(selectedArticle != nil && selectedArticle?.id != article.id ? 0 : 1)
-                        .animation(.easeInOut(duration: 0.3), value: selectedArticle?.id)
+                            )
+                            .id(article.id)
+                            .opacity(selectedArticle != nil && selectedArticle?.id != article.id ? 0 : 1)
+                            .animation(.easeInOut(duration: 0.3), value: selectedArticle?.id)
+                        }
                     }
+                    .padding(.horizontal, 12)
+                    .padding(.top, 48)
+                    .padding(.bottom, 120) // Space for TabBar
                 }
-                .padding(.horizontal, 12)
-                .padding(.top, 48)
-                .padding(.bottom, 120) // Space for TabBar
-            }
-            .scrollDisabled(selectedArticle != nil)
-            .coordinateSpace(name: "scroll")
-            .onPreferenceChange(ScrollOffsetKey.self) { offset in
-                let delta = lastOffset - offset
-                lastOffset = offset
-                
-                if offset >= 0 {
-                    withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8)) {
-                        minimizeProgress = 0
-                    }
-                } else {
-                    withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8)) {
-                        let newProgress = minimizeProgress + Double(delta / 100.0)
-                        minimizeProgress = min(max(newProgress, 0), 1)
+                .scrollDisabled(selectedArticle != nil)
+                .coordinateSpace(name: "scroll")
+                .onPreferenceChange(ScrollOffsetKey.self) { offset in
+                    let delta = lastOffset - offset
+                    lastOffset = offset
+                    
+                    if offset >= 0 {
+                        withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8)) {
+                            minimizeProgress = 0
+                        }
+                    } else {
+                        withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8)) {
+                            let newProgress = minimizeProgress + Double(delta / 100.0)
+                            minimizeProgress = min(max(newProgress, 0), 1)
+                        }
                     }
                 }
             }
@@ -356,14 +361,13 @@ struct ArticleRowView: View {
             ZStack {
                 Color(red: 245/255, green: 245/255, blue: 245/255)
                 
-                if isExpanded, let image = image {
+                if let image = image {
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .figmaLayerBlur(radius: 94)
                         .opacity(0.26)
-                        .transition(.opacity)
                 }
             }
         }

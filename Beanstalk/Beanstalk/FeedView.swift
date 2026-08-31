@@ -200,12 +200,7 @@ struct ArticleRowView: View {
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
-            .overlay(
-                Color.white.opacity(0.001)
-                    .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
-                    .modifier(RippleModifier(rippleColor: Color.black.opacity(0.4), touchLocation: touchLocation, isPressed: isPressed))
-                    .allowsHitTesting(false)
-            )
+            .modifier(RippleModifier(rippleColor: Color.black.opacity(0.4), touchLocation: touchLocation, isPressed: isPressed))
             .background(
                 TouchLocatingView { location in
                     if !isPressed {

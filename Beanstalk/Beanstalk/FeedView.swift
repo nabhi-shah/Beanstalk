@@ -203,7 +203,7 @@ struct ArticleRowView: View {
             .overlay(
                 Color.white.opacity(0.001)
                     .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
-                    .modifier(RippleModifier(rippleColor: Color.black.opacity(0.15), touchLocation: touchLocation, isPressed: isPressed))
+                    .modifier(RippleModifier(rippleColor: Color.black.opacity(0.4), touchLocation: touchLocation, isPressed: isPressed))
                     .allowsHitTesting(false)
             )
             .background(

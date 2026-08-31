@@ -14,7 +14,7 @@ struct ArticleDetailView: View {
             let safeTop = max(windowInsets?.top ?? geo.safeAreaInsets.top, 20)
             let safeBottom = max(windowInsets?.bottom ?? geo.safeAreaInsets.bottom, 20)
             let cardWidth = geo.size.width - 24 // 12px padding on each side
-            let dotsHeight: CGFloat = 14
+            let dotsHeight: CGFloat = 20
             let cardGap: CGFloat = 12
             let cardHeight = geo.size.height - safeTop - safeBottom - dotsHeight - cardGap
             
@@ -208,19 +208,19 @@ struct ArticleDetailView: View {
                     .matchedGeometryEffect(id: "card-\(article.id)", in: animation)
                     
                     // Pagination dots and chat icon
-                    HStack(spacing: 8) {
+                    HStack(spacing: 4) {
                         Circle()
                             .fill(Color(red: 40/255, green: 40/255, blue: 40/255))
-                            .frame(width: 8, height: 8)
+                            .frame(width: 10, height: 10)
                         Circle()
                             .fill(Color.gray)
-                            .frame(width: 8, height: 8)
+                            .frame(width: 10, height: 10)
                         Image("chat-teardrop-dots-fill")
                             .renderingMode(.template)
                             .resizable()
                             .scaledToFit()
                             .foregroundColor(.gray)
-                            .frame(width: 14, height: 14)
+                            .frame(width: 20, height: 20)
                     }
                     .frame(height: dotsHeight)
                 }

@@ -113,7 +113,7 @@ struct FeedContentView: View {
                             ArticleRowView(article: article, animation: heroAnimation, isExpanded: selectedArticle?.id == article.id)
                         }
                         .buttonStyle(PlainButtonStyle())
-                        .opacity(selectedArticle != nil ? 0 : 1)
+                        .opacity(selectedArticle?.id == article.id ? 0 : 1)
                     }
                 }
                 .padding(.horizontal, 12)
@@ -191,7 +191,7 @@ struct ArticleRowView: View {
                  .stroke(Color(red: 223/255, green: 223/255, blue: 223/255), lineWidth: 0.5)
          )
         .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
-        .matchedGeometryEffect(id: "card-\(article.id)", in: animation, isSource: !isExpanded)
+        .matchedGeometryEffect(id: "card-\(article.id)", in: animation)
     }
     
     @ViewBuilder
@@ -268,10 +268,8 @@ struct ArticleRowView: View {
                     .frame(height: 290)
                     .clipped()
                     .progressiveBleedBlur(radius: 24, offset: 0.75, direction: .bottom, steps: 5)
-                    .matchedGeometryEffect(id: "background-\(article.id)", in: animation, isSource: !isExpanded)
             } else {
                 Color.clear.frame(height: 400)
-                    .matchedGeometryEffect(id: "background-\(article.id)", in: animation, isSource: !isExpanded)
             }
         }
         .background(Color(red: 245/255, green: 245/255, blue: 245/255))

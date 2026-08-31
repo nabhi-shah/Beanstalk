@@ -71,7 +71,6 @@ struct ArticleDetailView: View {
                                 )
                                 .frame(height: 290)
                                 .clipped()
-                                .matchedGeometryEffect(id: "background-\(article.id)", in: animation)
                             
                             Spacer(minLength: 0)
                         }

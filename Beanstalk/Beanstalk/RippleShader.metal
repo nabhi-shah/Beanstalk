@@ -3,6 +3,10 @@
 using namespace metal;
 
 [[ stitchable ]] half4 lightRipple(float2 position, half4 currentColor, float2 touchPos, float time, float2 size, half4 rippleColor) {
+    // Convert to float for safer math on A-series GPUs
+    float4 currentF = float4(currentColor);
+    float4 rippleF = float4(rippleColor);
+    
     // Distance from the exact touch point
     float distance = length(position - touchPos);
     
@@ -39,28 +43,28 @@ using namespace metal;
     
     // The base envelope for the ripple visibility
     float envelope = max(max(intensityR, intensityG), intensityB);
-    float blendAlpha = envelope * fade * rippleColor.a * 0.8; // Very subtle alpha boost
+    float blendAlpha = envelope * fade * rippleF.a * 0.8;
     
     // Only apply light to visible pixels to preserve shapes
-    if (currentColor.a == 0.0) {
+    if (currentF.a == 0.0) {
         return currentColor;
     }
     
     // Create the chromatic light
-    half3 chromaticLight = half3(intensityR, intensityG, intensityB);
+    float3 chromaticLight = float3(intensityR, intensityG, intensityB);
     
     // Tint it slightly with the requested ripple color to keep branding
-    chromaticLight = mix(chromaticLight, rippleColor.rgb, 0.5);
+    chromaticLight = mix(chromaticLight, rippleF.rgb, 0.5);
     
     // Add specular highlight
-    chromaticLight += half3(specular);
-    chromaticLight = clamp(chromaticLight, 0.0h, 1.0h);
+    chromaticLight += float3(specular);
+    chromaticLight = clamp(chromaticLight, 0.0, 1.0);
     
     // Blend the shiny chromatic ripple over the current color
-    half3 newColor = mix(currentColor.rgb, chromaticLight, clamp(blendAlpha, 0.0, 1.0));
+    float3 newColor = mix(currentF.rgb, chromaticLight, clamp(blendAlpha, 0.0, 1.0));
     
     // Increase alpha so the ripple is visible even on transparent backgrounds
-    half newAlpha = clamp(currentColor.a + blendAlpha, 0.0, 1.0);
+    float newAlpha = clamp(currentF.a + blendAlpha, 0.0, 1.0);
     
-    return half4(newColor, newAlpha);
+    return half4(newColor.r, newColor.g, newColor.b, newAlpha);
 }

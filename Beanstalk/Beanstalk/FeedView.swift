@@ -200,6 +200,14 @@ struct ArticleRowView: View {
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
+            .modifier(RippleModifier(rippleColor: Color.black.opacity(0.15), touchLocation: touchLocation, isPressed: isPressed))
+            .background(
+                TouchLocatingView { location in
+                    if !isPressed {
+                        touchLocation = location
+                    }
+                }
+            )
             .overlay(
                 RoundedRectangle(cornerRadius: 42, style: .continuous)
                     .stroke(Color(red: 223/255, green: 223/255, blue: 223/255), lineWidth: 0.5)
@@ -401,14 +409,6 @@ struct ArticleRowView: View {
                 }
             }
         }
-        .modifier(RippleModifier(rippleColor: Color.black.opacity(0.15), touchLocation: touchLocation, isPressed: isPressed))
-        .background(
-            TouchLocatingView { location in
-                if !isPressed {
-                    touchLocation = location
-                }
-            }
-        )
         .onTapGesture {
             if !isExpanded {
                 isPressed = true

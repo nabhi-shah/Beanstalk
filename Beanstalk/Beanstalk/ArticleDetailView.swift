@@ -225,7 +225,7 @@ struct ArticleDetailView: View {
                     .frame(height: dotsHeight)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(.top, safeTop + cardGap)
+                .padding(.top, safeTop)
                 .padding(.bottom, safeBottom)
             }
         }

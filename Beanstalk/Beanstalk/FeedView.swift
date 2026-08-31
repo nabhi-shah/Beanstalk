@@ -146,6 +146,8 @@ struct FeedContentView: View {
                 ProgressiveBlurView(height: 140, edge: .bottom)
             }
             .ignoresSafeArea()
+            .opacity(selectedArticle != nil ? 0 : 1)
+            .animation(.easeInOut(duration: 0.3), value: selectedArticle?.id)
 
             ProgressiveBlurView(height: 120, edge: .top)
                 .opacity(selectedArticle != nil ? 0 : 1)

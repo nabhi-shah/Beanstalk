@@ -30,13 +30,15 @@ struct ArticleDetailView: View {
                             
                             if let url = article.thumbnailURL {
                                 AsyncImage(url: url) { phase in
-                                    if let image = phase.image {
-                                        image
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
-                                            .blur(radius: 6)
-                                            .opacity(0.26)
-                                    }
+                                if let image = phase.image {
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: cardWidth, height: cardHeight)
+                                        .clipped()
+                                        .figmaLayerBlur(radius: 94)
+                                        .opacity(0.40)
+                                }
                                 }
                             }
                         }
@@ -57,9 +59,7 @@ struct ArticleDetailView: View {
                                                         .aspectRatio(contentMode: .fill)
                                                         .frame(width: geo.size.width, height: geo.size.height)
                                                         .clipped()
-                                                        .padding(94)
-                                                        .glur(radius: 94, offset: 0.75, interpolation: 0.25, direction: .down)
-                                                        .padding(-94)
+                                                        .progressiveBleedBlur(radius: 40, offset: 0.4, direction: .bottom, steps: 16)
                                                 default:
                                                     Color.clear
                                                 }

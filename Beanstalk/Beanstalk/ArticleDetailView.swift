@@ -14,13 +14,15 @@ struct ArticleDetailView: View {
             let safeTop = max(windowInsets?.top ?? geo.safeAreaInsets.top, 20)
             let safeBottom = max(windowInsets?.bottom ?? geo.safeAreaInsets.bottom, 20)
             let cardWidth = geo.size.width - 24 // 12px padding on each side
-            let cardHeight = geo.size.height - safeTop - safeBottom - 8 // tiny gap to avoid touching home bar
+            let dotsHeight: CGFloat = 14
+            let cardGap: CGFloat = 12
+            let cardHeight = geo.size.height - safeTop - safeBottom - dotsHeight - cardGap
             
             ZStack {
                 // White background behind the modal
                 Color.white
                 
-                VStack(spacing: 8) {
+                VStack(spacing: cardGap) {
                     ZStack(alignment: .top) {
                         // Base background: #F5F5F5 + blurred image at 26% opacity covering entire card
                         ZStack {
@@ -220,10 +222,11 @@ struct ArticleDetailView: View {
                             .foregroundColor(.gray)
                             .frame(width: 14, height: 14)
                     }
-                    .frame(height: 34) // dots height sitting in the safe area
+                    .frame(height: dotsHeight)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(.top, safeTop)
+                .padding(.bottom, safeBottom)
             }
         }
         .ignoresSafeArea()

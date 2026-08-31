@@ -214,20 +214,7 @@ struct ArticleRowView: View {
         ZStack(alignment: .top) {
             // 2. Content
             ZStack(alignment: .top) {
-                // Blurred Image Layer as a separate element, NOT clipped!
-                GeometryReader { proxy in
-                    if let image = image {
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: proxy.size.width, height: proxy.size.height)
-                            .clipped()
-                            .figmaLayerBlur(radius: 94)
-                            .opacity(0.40)
-                    }
-                }
-                .allowsHitTesting(false)
-                
+
                 // Text Content
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(spacing: 12) {

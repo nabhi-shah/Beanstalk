@@ -1,101 +1,18 @@
-import SwiftUI
-import Combine
-import Glur
+import re
 
-enum MainTab: Hashable {
-    case home, search, saved, profile
-}
-struct ScrollOffsetKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
-    }
-}
+with open("/Users/nabhi/Desktop/Projects/Beanstalk/Beanstalk/Beanstalk/FeedView.swift", "r") as f:
+    content = f.read()
 
-struct FeedView: View {
-    @Binding var appState: AppState
-    var animationNamespace: Namespace.ID
-    
-    @State private var selectedTab: MainTab = .home
-    @State private var minimizeProgress: Double = 0
-    @State private var selectedArticle: Article?
-    @Namespace private var heroAnimation
-    
-    var body: some View {
-        NavigationStack {
-            UnionTabView(
-                selection: $selectedTab, 
-                tabs: [.home, .search, .saved, .profile], 
-                minimizeProgress: minimizeProgress,
-                hideOffset: selectedArticle != nil ? 100 : 0
-            ) {
-                FeedContentView(animationNamespace: animationNamespace, minimizeProgress: $minimizeProgress, selectedArticle: $selectedArticle, heroAnimation: heroAnimation).unionTab(MainTab.home)
-                
-                Color.appBackground.ignoresSafeArea()
-                    .overlay(Text("Search").foregroundColor(.textSecondary))
-                    .unionTab(MainTab.search)
-                
-                Color.appBackground.ignoresSafeArea()
-                    .overlay(Text("Saved").foregroundColor(.textSecondary))
-                    .unionTab(MainTab.saved)
-                
-                Color.appBackground.ignoresSafeArea()
-                    .overlay(Text("Profile").foregroundColor(.textSecondary))
-                    .unionTab(MainTab.profile)
-            } item: { tab, isSelected in
-                let iconName: String = {
-                    switch tab {
-                    case .home: return "cards-three"
-                    case .search: return "magnifying-glass"
-                    case .saved: return "bookmark"
-                    case .profile: return "user-circle"
-                    }
-                }()
-                
-                ZStack {
-                    Image(iconName)
-                        .renderingMode(.template)
-                        .resizable()
-                        .scaledToFit()
-                        .foregroundColor(.textSecondary)
-                        .opacity(isSelected ? 0 : 1)
-                    
-                    Image("\(iconName)-fill")
-                        .renderingMode(.template)
-                        .resizable()
-                        .scaledToFit()
-                        .foregroundColor(.white)
-                        .opacity(isSelected ? 1 : 0)
-                }
-                .frame(width: 28, height: 28)
-                .animation(.easeInOut(duration: 0.15), value: isSelected)
-            }
-            .toolbar(.hidden, for: .navigationBar)
-        }
-        .tint(.brandGreen)
-        
-    }
-}
+# 1. Remove overlay from FeedView
+content = re.sub(
+    r'\.overlay\(\s*Group\s*\{\s*if let selectedArticle = selectedArticle\s*\{\s*ArticleDetailView[^\}]+\}\s*\}\s*\)',
+    '',
+    content,
+    flags=re.MULTILINE
+)
 
-struct FeedContentView: View {
-    var animationNamespace: Namespace.ID
-    @Binding var minimizeProgress: Double
-    @Binding var selectedArticle: Article?
-    var heroAnimation: Namespace.ID
-    
-    @State private var lastOffset: CGFloat = 0
-
-    var body: some View {
-        ZStack(alignment: .top) {
-            Color.appBackground.ignoresSafeArea()
-            
-            ScrollView {
-                GeometryReader { proxy in
-                    Color.clear.preference(key: ScrollOffsetKey.self, value: proxy.frame(in: .named("scroll")).minY)
-                }
-                .frame(height: 0)
-                
-                                LazyVStack(spacing: 16) {
+# 2. Update LazyVStack in FeedContentView
+new_vstack = """                LazyVStack(spacing: 16) {
                     ForEach(MockData.articles) { article in
                         ArticleRowView(
                             article: article,
@@ -111,57 +28,16 @@ struct FeedContentView: View {
                             }
                         )
                         .opacity(selectedArticle != nil && selectedArticle?.id != article.id ? 0 : 1)
-                        .animation(.easeInOut(duration: 0.3), value: selectedArticle?.id)
+                        .animation(.easeInOut(duration: 0.3), value: selectedArticle)
                     }
-                }
-                .padding(.horizontal, 12)
-                .padding(.top, 48)
-                .padding(.bottom, 120) // Space for TabBar
-            }
-            .scrollDisabled(selectedArticle != nil)
-            .coordinateSpace(name: "scroll")
-            .onPreferenceChange(ScrollOffsetKey.self) { offset in
-                let delta = lastOffset - offset
-                lastOffset = offset
-                
-                if offset >= 0 {
-                    withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8)) {
-                        minimizeProgress = 0
-                    }
-                } else {
-                    withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8)) {
-                        let newProgress = minimizeProgress + Double(delta / 100.0)
-                        minimizeProgress = min(max(newProgress, 0), 1)
-                    }
-                }
-            }
-            
-            VStack {
-                Spacer()
-                ProgressiveBlurView(height: 140, edge: .bottom)
-            }
-            .ignoresSafeArea()
+                }"""
+content = re.sub(r'LazyVStack\(spacing: 16\)\s*\{.*?\.padding\(\.horizontal, 12\)', new_vstack + '\n                .padding(.horizontal, 12)', content, flags=re.DOTALL)
 
-            ProgressiveBlurView(height: 120, edge: .top)
+# 3. Disable scrolling
+content = content.replace('.coordinateSpace(name: "scroll")', '.scrollDisabled(selectedArticle != nil)\n            .coordinateSpace(name: "scroll")')
 
-            // Custom Header
-            HStack {
-                Spacer()
-                Image("BeanstalkLogo")
-                    .renderingMode(.original)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 24)
-                    .matchedGeometryEffect(id: "logo", in: animationNamespace)
-                    .padding(.top, 4)
-                    .padding(.bottom, 8)
-                Spacer()
-            }
-        }
-    }
-}
-
-struct ArticleRowView: View {
+# 4. Replace ArticleRowView
+new_row = """struct ArticleRowView: View {
     let article: Article
     var isExpanded: Bool = false
     var onToggle: () -> Void
@@ -373,28 +249,9 @@ struct ArticleRowView: View {
             }
         }
     }
-}
+}"""
+content = re.sub(r'struct ArticleRowView: View \{.*?\n// Custom modifier to simulate', new_row + '\n\n// Custom modifier to simulate', content, flags=re.DOTALL)
 
-// Custom modifier to simulate Figma's un-clamped layer blur
-struct FigmaLayerBlur: ViewModifier {
-    var radius: CGFloat
-    
-    func body(content: Content) -> some View {
-        content
-            .padding(radius * 2)
-            .blur(radius: radius)
-            .padding(-radius * 2)
-    }
-}
+with open("/Users/nabhi/Desktop/Projects/Beanstalk/Beanstalk/Beanstalk/FeedView.swift", "w") as f:
+    f.write(content)
 
-extension View {
-    func figmaLayerBlur(radius: CGFloat) -> some View {
-        modifier(FigmaLayerBlur(radius: radius))
-    }
-}
-
-#Preview {
-    @Previewable @Namespace var namespace
-    FeedView(appState: .constant(.feed), animationNamespace: namespace)
-}
-import SwiftUI

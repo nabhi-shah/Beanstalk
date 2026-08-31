@@ -220,7 +220,7 @@ struct ArticleDetailView: View {
                             .resizable()
                             .scaledToFit()
                             .foregroundColor(.gray)
-                            .frame(width: 20, height: 20)
+                            .frame(width: 10, height: 10)
                     }
                     .frame(height: dotsHeight)
                 }

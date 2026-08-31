@@ -220,7 +220,7 @@ struct ArticleRowView: View {
                             .opacity(0.40)
                     }
                 }
-                .allowsHitTesting(false).zIndex(1)
+                .allowsHitTesting(false)
                 
                 // Text Content
                 VStack(alignment: .leading, spacing: 12) {
@@ -256,11 +256,8 @@ struct ArticleRowView: View {
                 .padding(.horizontal, 24)
                 .padding(.vertical, 24)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .zIndex(2) // Ensures text is above the blurred image!
             }
             .padding(.top, 240) // Shift content below the sharp image
-            // Z-Index ensures this entire Content section (and its bleeding blur) renders OVER the top Image
-            .zIndex(0.5)
         }
         .background(alignment: .top) {
             if let image = image {
@@ -271,12 +268,13 @@ struct ArticleRowView: View {
                     .frame(height: 290)
                     .clipped()
                     .progressiveBleedBlur(radius: 24, offset: 0.75, direction: .bottom, steps: 5)
+                    .matchedGeometryEffect(id: "background-\(article.id)", in: animation, isSource: !isExpanded)
             } else {
                 Color.clear.frame(height: 400)
+                    .matchedGeometryEffect(id: "background-\(article.id)", in: animation, isSource: !isExpanded)
             }
         }
         .background(Color(red: 245/255, green: 245/255, blue: 245/255))
-        .matchedGeometryEffect(id: "background-\(article.id)", in: animation, isSource: !isExpanded)
     }
 }
 

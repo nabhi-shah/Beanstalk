@@ -59,7 +59,7 @@ struct ArticleDetailView: View {
                                                         .aspectRatio(contentMode: .fill)
                                                         .frame(width: geo.size.width, height: geo.size.height)
                                                         .clipped()
-                                                        .progressiveBleedBlur(radius: 40, offset: 0.4, direction: .bottom, steps: 16)
+                                                        .progressiveBleedBlur(radius: 24, offset: 0.75, direction: .bottom, steps: 5)
                                                 default:
                                                     Color.clear
                                                 }
@@ -69,7 +69,7 @@ struct ArticleDetailView: View {
                                         }
                                     }
                                 )
-                                .frame(height: 240)
+                                .frame(height: 290)
                                 .clipped()
                                 .matchedGeometryEffect(id: "background-\(article.id)", in: animation)
                             
@@ -80,7 +80,7 @@ struct ArticleDetailView: View {
                         
                         // Content Section (Bottom) — scrollable if needed
                         VStack(spacing: 0) {
-                            Spacer(minLength: 240) // Push content strictly below the image area
+                            Spacer(minLength: 290) // Push content strictly below the image area
                             
                             VStack(alignment: .leading, spacing: 12) {
                                 HStack(spacing: 12) {

@@ -21,12 +21,18 @@ using namespace metal;
     
     // Chromatic aberration split (offsetting the wave crest for R, G, B)
     float split = 3.0; 
-    float intensityR = exp(-pow((distFromWave - split) / waveWidth, 2.0));
-    float intensityG = exp(-pow(distFromWave / waveWidth, 2.0));
-    float intensityB = exp(-pow((distFromWave + split) / waveWidth, 2.0));
+    float valR = (distFromWave - split) / waveWidth;
+    float intensityR = exp(-(valR * valR));
+    
+    float valG = distFromWave / waveWidth;
+    float intensityG = exp(-(valG * valG));
+    
+    float valB = (distFromWave + split) / waveWidth;
+    float intensityB = exp(-(valB * valB));
     
     // Subtle specular highlight exactly at the crest
-    float specular = exp(-pow(distFromWave / (waveWidth * 0.15), 2.0)) * 0.15;
+    float valS = distFromWave / (waveWidth * 0.15);
+    float specular = exp(-(valS * valS)) * 0.15;
     
     // Fade out as it expands
     float fade = 1.0 - time;

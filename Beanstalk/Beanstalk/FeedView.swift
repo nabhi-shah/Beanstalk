@@ -245,8 +245,8 @@ struct ArticleRowView: View {
             .first?.windows.first?.safeAreaInsets
         let safeTop = max(windowInsets?.top ?? 47, 47)
         let safeBottom = max(windowInsets?.bottom ?? 34, 34)
-        // Screen height - safeTop - 48 (ScrollView top padding) - safeBottom - 20 (dots) - 12 (spacing)
-        let calculated = UIScreen.main.bounds.height - safeTop - 48 - safeBottom - 32
+        // Screen height - safeTop - safeBottom - 20 (dots) - 12 (spacing)
+        let calculated = UIScreen.main.bounds.height - safeTop - safeBottom - 32
         return max(calculated, 600) // Ensure it doesn't get ridiculously small on tiny screens
     }
     

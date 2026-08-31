@@ -116,7 +116,7 @@ struct ArticleDetailView: View {
                                     .padding(.top, 8)
                             }
                             .padding(24)
-                            .padding(.top, 24)
+                            .padding(.top, 6)
                             .padding(.bottom, 64)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             

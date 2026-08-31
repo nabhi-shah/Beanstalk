@@ -102,7 +102,7 @@ struct FeedContentView: View {
                                 article: article,
                                 isExpanded: selectedArticle?.id == article.id,
                                 onToggle: {
-                                    withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                                    withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
                                         if selectedArticle?.id == article.id {
                                             selectedArticle = nil
                                         } else {
@@ -178,28 +178,51 @@ struct ArticleRowView: View {
     @State private var showActions: Bool = false
     
     var body: some View {
-        Group {
-            if let url = article.thumbnailURL {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let image):
-                        cardContent(image: image)
-                    case .empty, .failure:
-                        cardContent(image: nil)
-                    @unknown default:
-                        cardContent(image: nil)
+        VStack(spacing: 12) {
+            Group {
+                if let url = article.thumbnailURL {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .success(let image):
+                            cardContent(image: image)
+                        case .empty, .failure:
+                            cardContent(image: nil)
+                        @unknown default:
+                            cardContent(image: nil)
+                        }
                     }
+                } else {
+                    cardContent(image: nil)
                 }
-            } else {
-                cardContent(image: nil)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 42, style: .continuous)
+                    .stroke(Color(red: 223/255, green: 223/255, blue: 223/255), lineWidth: 0.5)
+            )
+            .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+            .frame(height: isExpanded ? expandedCardHeight : nil) // Expand to fill screen
+            
+            if isExpanded {
+                // Pagination dots and chat icon
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(Color(red: 40/255, green: 40/255, blue: 40/255))
+                        .frame(width: 10, height: 10)
+                    Circle()
+                        .fill(Color.gray)
+                        .frame(width: 10, height: 10)
+                    Image("chat-teardrop-dots-fill")
+                        .renderingMode(.template)
+                        .resizable()
+                        .scaledToFit()
+                        .foregroundColor(.gray)
+                        .frame(width: 10, height: 10)
+                }
+                .frame(height: 20)
+                .transition(.opacity)
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 42, style: .continuous)
-                .stroke(Color(red: 223/255, green: 223/255, blue: 223/255), lineWidth: 0.5)
-        )
-        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
         .onChange(of: isExpanded) { oldValue, newValue in
             if newValue {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -211,6 +234,18 @@ struct ArticleRowView: View {
                 showActions = false
             }
         }
+    }
+    
+    // Computed height for expanded state to fill the screen minus safe areas, dots, and padding
+    private var expandedCardHeight: CGFloat {
+        let windowInsets = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first?.windows.first?.safeAreaInsets
+        let safeTop = max(windowInsets?.top ?? 47, 47)
+        let safeBottom = max(windowInsets?.bottom ?? 34, 34)
+        // Screen height - safeTop - 48 (ScrollView top padding) - safeBottom - 20 (dots) - 12 (spacing)
+        let calculated = UIScreen.main.bounds.height - safeTop - 48 - safeBottom - 32
+        return max(calculated, 600) // Ensure it doesn't get ridiculously small on tiny screens
     }
     
     @ViewBuilder

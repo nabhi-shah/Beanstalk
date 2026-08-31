@@ -190,7 +190,7 @@ struct ArticleDetailView: View {
                                 .background(
                                     Circle().glassEffect(.regular.tint(.white.opacity(0.25)), in: .circle)
                                 )
-                                .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+                                .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 3)
                             }
                             .padding(.horizontal, 24)
                             .padding(.bottom, 24)

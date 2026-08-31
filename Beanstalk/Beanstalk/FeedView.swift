@@ -117,7 +117,7 @@ struct FeedContentView: View {
                     }
                 }
                 .padding(.horizontal, 12)
-                .padding(.top, 64)
+                .padding(.top, 24)
                 .padding(.bottom, 120) // Space for TabBar
             }
             .coordinateSpace(name: "scroll")

@@ -233,6 +233,13 @@ struct ArticleRowView: View {
                     .fill(Color(red: 205/255, green: 205/255, blue: 205/255))
                     .overlay(RoundedRectangle(cornerRadius: 42, style: .continuous).stroke(Color(red: 223/255, green: 223/255, blue: 223/255), lineWidth: 0.5))
                     .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+                    .overlay(
+                        Group {
+                            if isExpanded {
+                                grabHandle()
+                            }
+                        }
+                    )
                     .scaleEffect(x: c2.scaleX, y: c2.scaleY)
                     .offset(x: c2.xOffset)
                     .opacity(c2.opacity)
@@ -499,6 +506,11 @@ struct ArticleRowView: View {
                 }
                 .padding(.trailing, 24)
                 .padding(.bottom, 24)
+            }
+            
+            // Bottom Grab Handle for Swiping Cards (only when expanded)
+            if isExpanded {
+                grabHandle()
             }
         }
         .background {

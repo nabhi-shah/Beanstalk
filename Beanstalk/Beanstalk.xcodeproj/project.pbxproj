@@ -6,10 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		0A1E706C30448C7600C7B05D /* Glur in Frameworks */ = {isa = PBXBuildFile; productRef = 712F791B3E4F909F06C238DD /* Glur */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXContainerItemProxy section */
 		0A6B19913033525E00B75816 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -69,7 +65,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0A1E706C30448C7600C7B05D /* Glur in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -130,7 +125,6 @@
 			);
 			name = Beanstalk;
 			packageProductDependencies = (
-				712F791B3E4F909F06C238DD /* Glur */,
 			);
 			productName = Beanstalk;
 			productReference = 0A6B197F3033525D00B75816 /* Beanstalk.app */;
@@ -211,7 +205,6 @@
 			mainGroup = 0A6B19763033525D00B75816;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				EC4AD5334674C9160BD85810 /* XCRemoteSwiftPackageReference "Glur" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0A6B19803033525D00B75816 /* Products */;
@@ -594,25 +587,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		EC4AD5334674C9160BD85810 /* XCRemoteSwiftPackageReference "Glur" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/joogps/Glur.git";
-			requirement = {
-				branch = main;
-				kind = branch;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		712F791B3E4F909F06C238DD /* Glur */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = EC4AD5334674C9160BD85810 /* XCRemoteSwiftPackageReference "Glur" */;
-			productName = Glur;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0A6B19773033525D00B75816 /* Project object */;
 }

@@ -233,7 +233,6 @@ struct ArticleRowView: View {
                     .fill(Color(red: 205/255, green: 205/255, blue: 205/255))
                     .overlay(RoundedRectangle(cornerRadius: 42, style: .continuous).stroke(Color(red: 223/255, green: 223/255, blue: 223/255), lineWidth: 0.5))
                     .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
-                    .overlay(carouselGestureLayer())
                     .scaleEffect(x: c2.scaleX, y: c2.scaleY)
                     .offset(x: c2.xOffset)
                     .opacity(c2.opacity)
@@ -421,12 +420,7 @@ struct ArticleRowView: View {
                 .padding(.top, 16)
             }
             
-            // Gesture Layer for Swiping
-            // We apply it here below the header so that horizontal swiping works, 
-            // but we use minimumDistance: 15 so it doesn't block vertical scrolling.
-            carouselGestureLayer()
-            
-            // Fixed Header overlay (sits above ScrollView and GestureLayer)
+            // Fixed Header overlay (sits above ScrollView)
             ZStack(alignment: .top) {
                 // Progressive blur behind the header to fade the scrolling text
                 ProgressiveBlurView(height: 140, edge: .top)
@@ -571,10 +565,6 @@ struct ArticleRowView: View {
             }
             .padding(.top, 240) // Shift content below the sharp image
             
-            // Gesture Layer: Sits below the buttons but above the content.
-            // This captures the long press and drag EXCEPT where the buttons intercept it.
-            carouselGestureLayer()
-            
             // 3. Action Buttons Overlay
             if isExpanded {
                 VStack {
@@ -642,6 +632,34 @@ struct ArticleRowView: View {
                     .padding(.bottom, 24)
                 }
                 .opacity(showActions ? 1 : 0)
+            }
+            
+            // Bottom Grab Handle for Swiping Cards
+            if isExpanded {
+                VStack {
+                    Spacer()
+                    
+                    VStack(spacing: 8) {
+                        HStack(spacing: 4) {
+                            VStack(spacing: 4) {
+                                Circle().frame(width: 4, height: 4)
+                                Circle().frame(width: 4, height: 4)
+                                Circle().frame(width: 4, height: 4)
+                            }
+                            VStack(spacing: 4) {
+                                Circle().frame(width: 4, height: 4)
+                                Circle().frame(width: 4, height: 4)
+                                Circle().frame(width: 4, height: 4)
+                            }
+                        }
+                        .foregroundColor(Color.textSecondary.opacity(0.4))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .background(Color.white.opacity(0.001))
+                    .contentShape(Rectangle())
+                    .overlay(carouselGestureLayer()) // Gesture is now ONLY at the bottom
+                }
             }
         }
         .background(alignment: .top) {

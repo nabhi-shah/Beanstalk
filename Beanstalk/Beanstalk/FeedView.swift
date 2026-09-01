@@ -711,12 +711,10 @@ struct ArticleRowView: View {
                         HStack(spacing: 3) {
                             Circle().frame(width: 3, height: 3)
                             Circle().frame(width: 3, height: 3)
-                        }
-                        HStack(spacing: 3) {
-                            Circle().frame(width: 3, height: 3)
                             Circle().frame(width: 3, height: 3)
                         }
                         HStack(spacing: 3) {
+                            Circle().frame(width: 3, height: 3)
                             Circle().frame(width: 3, height: 3)
                             Circle().frame(width: 3, height: 3)
                         }

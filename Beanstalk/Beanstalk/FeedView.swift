@@ -480,21 +480,29 @@ struct ArticleRowView: View {
                 Spacer()
                 HStack {
                     Spacer()
-                    Button(action: { }) {
-                        Image(systemName: "pencil")
-                            .font(.system(size: 20, weight: .semibold))
-                            .foregroundColor(.textDark)
+                    Button(action: {}) {
+                        Image("PencilSimpleLine")
+                            .renderingMode(.template)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 24, height: 24)
+                            .foregroundColor(.textSecondary)
                             .frame(width: 56, height: 56)
-                            .background(
-                                Circle().fill(Color.white)
-                                    .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
-                            )
+                            .background(Circle().fill(Color.white.opacity(0.01)))
+                            .contentShape(Circle())
                     }
                     .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.3)))
+                    .background(
+                        Circle().glassEffect(.regular.tint(.white.opacity(0.25)), in: .circle)
+                    )
+                    .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 3)
                 }
                 .padding(.trailing, 24)
-                .padding(.bottom, 36) // Above the pagination dots
+                .padding(.bottom, 64) // Above the grab handle
             }
+            
+            // Bottom Grab Handle
+            grabHandle()
         }
         .background {
             // Full card background: #F5F5F5 base + blurred image on top
@@ -635,32 +643,7 @@ struct ArticleRowView: View {
             }
             
             // Bottom Grab Handle for Swiping Cards
-            if isExpanded {
-                VStack {
-                    Spacer()
-                    
-                    VStack(spacing: 8) {
-                        HStack(spacing: 4) {
-                            VStack(spacing: 4) {
-                                Circle().frame(width: 4, height: 4)
-                                Circle().frame(width: 4, height: 4)
-                                Circle().frame(width: 4, height: 4)
-                            }
-                            VStack(spacing: 4) {
-                                Circle().frame(width: 4, height: 4)
-                                Circle().frame(width: 4, height: 4)
-                                Circle().frame(width: 4, height: 4)
-                            }
-                        }
-                        .foregroundColor(Color.textSecondary.opacity(0.4))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(Color.white.opacity(0.001))
-                    .contentShape(Rectangle())
-                    .overlay(carouselGestureLayer()) // Gesture is now ONLY at the bottom
-                }
-            }
+            grabHandle()
         }
         .background(alignment: .top) {
             if let image = image {
@@ -702,44 +685,78 @@ struct ArticleRowView: View {
     }
     
     @ViewBuilder
-    private func carouselGestureLayer() -> some View {
-        if isExpanded {
-            Color.white.opacity(0.001)
-                .conditionalGesture(isExpanded, 
-                    // Use minimumDistance 15 so it doesn't block vertical scrolling on ScrollViews
-                    DragGesture(minimumDistance: 15)
-                        .onChanged { value in
-                            dragOffset = value.translation.width
+    private func grabHandle() -> some View {
+        VStack(spacing: 0) {
+            Spacer()
+            
+            ZStack(alignment: .bottom) {
+                // Progressive blur behind the grabber
+                ProgressiveBlurView(height: 64, edge: .bottom)
+                    .allowsHitTesting(false)
+                
+                VStack(spacing: 8) {
+                    VStack(spacing: 3) {
+                        HStack(spacing: 3) {
+                            Circle().frame(width: 3, height: 3)
+                            Circle().frame(width: 3, height: 3)
                         }
-                        .onEnded { value in
-                            withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
-                                isLongPressing = false
-                                if dragOffset > 50 {
-                                    frontCardIndex = (frontCardIndex - 1 + 3) % 3
-                                } else if dragOffset < -50 {
-                                    frontCardIndex = (frontCardIndex + 1) % 3
-                                }
-                                dragOffset = 0
-                            }
+                        HStack(spacing: 3) {
+                            Circle().frame(width: 3, height: 3)
+                            Circle().frame(width: 3, height: 3)
                         }
-                )
-                .onLongPressGesture(minimumDuration: 0, pressing: { isPressing in
-                    if isExpanded && isPressing {
-                        withAnimation(.spring(response: 0.05, dampingFraction: 0.6)) {
-                            isLongPressing = true
-                        }
-                        isPressed = true
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            isPressed = false
-                        }
-                    } else if isExpanded && !isPressing && dragOffset == 0 {
-                        // Only revert if we haven't started dragging
-                        withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
-                            isLongPressing = false
+                        HStack(spacing: 3) {
+                            Circle().frame(width: 3, height: 3)
+                            Circle().frame(width: 3, height: 3)
                         }
                     }
-                }, perform: {})
+                    .foregroundColor(Color.textSecondary.opacity(0.4))
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 32)
+                .background(Color.white.opacity(0.001))
+                .contentShape(Rectangle())
+                .overlay(carouselGestureLayer()) // Gesture is now ONLY at the bottom
+            }
         }
+    }
+    
+    @ViewBuilder
+    private func carouselGestureLayer() -> some View {
+        Color.white.opacity(0.001)
+            .conditionalGesture(true, 
+                // Use minimumDistance 15 so it doesn't block vertical scrolling on ScrollViews
+                DragGesture(minimumDistance: 15)
+                    .onChanged { value in
+                        dragOffset = value.translation.width
+                    }
+                    .onEnded { value in
+                        withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                            isLongPressing = false
+                            if dragOffset > 50 {
+                                frontCardIndex = (frontCardIndex - 1 + 3) % 3
+                            } else if dragOffset < -50 {
+                                frontCardIndex = (frontCardIndex + 1) % 3
+                            }
+                            dragOffset = 0
+                        }
+                    }
+            )
+            .onLongPressGesture(minimumDuration: 0, pressing: { isPressing in
+                if isPressing {
+                    withAnimation(.spring(response: 0.05, dampingFraction: 0.6)) {
+                        isLongPressing = true
+                    }
+                    isPressed = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        isPressed = false
+                    }
+                } else if !isPressing && dragOffset == 0 {
+                    // Only revert if we haven't started dragging
+                    withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                        isLongPressing = false
+                    }
+                }
+            }, perform: {})
     }
 }
 

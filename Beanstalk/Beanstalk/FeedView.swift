@@ -482,6 +482,12 @@ struct ArticleRowView: View {
                 .padding(.top, 24)
             }
             
+            // Bottom Grab Handle for Swiping Cards (only when expanded)
+            // Rendered before the FAB so it doesn't blur the button
+            if isExpanded {
+                grabHandle()
+            }
+            
             // Floating Action Button (FAB)
             VStack {
                 Spacer()
@@ -506,11 +512,6 @@ struct ArticleRowView: View {
                 }
                 .padding(.trailing, 24)
                 .padding(.bottom, 24)
-            }
-            
-            // Bottom Grab Handle for Swiping Cards (only when expanded)
-            if isExpanded {
-                grabHandle()
             }
         }
         .background {

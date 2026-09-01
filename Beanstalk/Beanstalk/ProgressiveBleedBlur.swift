@@ -15,66 +15,50 @@ public struct ProgressiveBleedBlur: ViewModifier {
     
     public func body(content: Content) -> some View {
         ZStack {
+            // Calculate step size
+            let bandSize = (1.0 - offset) / CGFloat(steps)
+            
             // 0. Base Unblurred Layer
+            // It is fully opaque up to the offset, then fades out into the first blur layer.
             content
+                .mask(
+                    LinearGradient(
+                        stops: [
+                            .init(color: .black, location: 0.0),
+                            .init(color: .black, location: offset),
+                            .init(color: .clear, location: offset + bandSize)
+                        ],
+                        startPoint: startPoint(for: direction),
+                        endPoint: endPoint(for: direction)
+                    )
+                )
             
             // 1...N Blurred Layers
+            // Each layer is a specific band that fades in from the previous layer, peaks, and fades out into the next layer.
             ForEach(1...steps, id: \.self) { step in
                 let progress = CGFloat(step) / CGFloat(steps)
-                let currentRadius = radius * pow(progress, 1.5)
+                let currentRadius = radius * pow(progress, 1.5) // Non-linear blur scale
                 
                 let prevLocation = offset + (1.0 - offset) * CGFloat(step - 1) / CGFloat(steps)
                 let currLocation = offset + (1.0 - offset) * progress
+                let nextLocation = offset + (1.0 - offset) * CGFloat(step + 1) / CGFloat(steps)
                 
                 content
-                    // Blur first so the full image energy is preserved and spreads outward
-                    .blur(radius: currentRadius)
                     .mask(
-                        // We use a custom extension mask that exactly covers the image with the gradient,
-                        // and extends infinitely outward with solid black to prevent clipping the bleed.
-                        bleedMask(prevLocation: prevLocation, currLocation: currLocation)
+                        LinearGradient(
+                            stops: [
+                                .init(color: .clear, location: prevLocation),
+                                .init(color: .black, location: currLocation),
+                                .init(color: step == steps ? .black : .clear, location: step == steps ? 1.0 : nextLocation)
+                            ],
+                            startPoint: startPoint(for: direction),
+                            endPoint: endPoint(for: direction)
+                        )
                     )
+                    .padding(radius * 2) // padding for organic bleed
+                    .blur(radius: currentRadius)
+                    .padding(-radius * 2)
             }
-        }
-    }
-    
-    @ViewBuilder
-    private func bleedMask(prevLocation: CGFloat, currLocation: CGFloat) -> some View {
-        let bleedAmount: CGFloat = radius * 4 // Enough space to catch all blur bleed
-        let gradient = LinearGradient(
-            stops: [
-                .init(color: .clear, location: prevLocation),
-                .init(color: .black, location: currLocation)
-            ],
-            startPoint: startPoint(for: direction),
-            endPoint: endPoint(for: direction)
-        )
-        
-        switch direction {
-        case .bottom:
-            VStack(spacing: 0) {
-                gradient
-                Color.black.frame(height: bleedAmount)
-            }
-            .padding(.bottom, -bleedAmount)
-        case .top:
-            VStack(spacing: 0) {
-                Color.black.frame(height: bleedAmount)
-                gradient
-            }
-            .padding(.top, -bleedAmount)
-        case .leading:
-            HStack(spacing: 0) {
-                Color.black.frame(width: bleedAmount)
-                gradient
-            }
-            .padding(.leading, -bleedAmount)
-        case .trailing:
-            HStack(spacing: 0) {
-                gradient
-                Color.black.frame(width: bleedAmount)
-            }
-            .padding(.trailing, -bleedAmount)
         }
     }
     
@@ -102,3 +86,5 @@ public extension View {
         modifier(ProgressiveBleedBlur(radius: radius, offset: offset, direction: direction, steps: steps))
     }
 }
+
+

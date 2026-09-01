@@ -652,7 +652,7 @@ struct ArticleRowView: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: 290)
                     .clipped()
-                    .progressiveBleedBlur(radius: 24, offset: 0.75, direction: .bottom, steps: 5)
+                    .progressiveBleedBlur(radius: 24, offset: 0.75, direction: .bottom, steps: 7)
             } else {
                 Color.clear.frame(height: 400)
             }

@@ -26,7 +26,7 @@ public struct ProgressiveBleedBlur: ViewModifier {
                         stops: [
                             .init(color: .black, location: 0.0),
                             .init(color: .black, location: offset),
-                            .init(color: .clear, location: offset + bandSize)
+                            .init(color: .clear, location: offset + bandSize * 1.5)
                         ],
                         startPoint: startPoint(for: direction),
                         endPoint: endPoint(for: direction)
@@ -39,9 +39,9 @@ public struct ProgressiveBleedBlur: ViewModifier {
                 let progress = CGFloat(step) / CGFloat(steps)
                 let currentRadius = radius * pow(progress, 1.5) // Non-linear blur scale
                 
-                let prevLocation = offset + (1.0 - offset) * CGFloat(step - 1) / CGFloat(steps)
-                let currLocation = offset + (1.0 - offset) * progress
-                let nextLocation = offset + (1.0 - offset) * CGFloat(step + 1) / CGFloat(steps)
+                let prevLocation = offset + bandSize * CGFloat(step - 1) - (bandSize * 0.5)
+                let currLocation = offset + bandSize * CGFloat(step)
+                let nextLocation = offset + bandSize * CGFloat(step + 1) + (bandSize * 0.5)
                 
                 content
                     .mask(

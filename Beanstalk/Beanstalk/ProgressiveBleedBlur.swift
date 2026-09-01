@@ -16,24 +16,18 @@ public struct ProgressiveBleedBlur: ViewModifier {
     public func body(content: Content) -> some View {
         ZStack {
             // 0. Base Unblurred Layer
-            // Fills the entire view. The blurred layers will be drawn on top of it.
             content
             
             // 1...N Blurred Layers
-            // We stack them from least blurred to most blurred.
-            // Each layer fades in over the previous layer and stays solid to the edge.
-            // Because they stack on top of fully opaque layers, there are no opacity gaps (banding).
             ForEach(1...steps, id: \.self) { step in
                 let progress = CGFloat(step) / CGFloat(steps)
-                let currentRadius = radius * pow(progress, 1.5) // Non-linear blur scale
+                let currentRadius = radius * pow(progress, 1.5)
                 
                 let prevLocation = offset + (1.0 - offset) * CGFloat(step - 1) / CGFloat(steps)
                 let currLocation = offset + (1.0 - offset) * progress
                 
+                // Mask BEFORE blur to allow the bleed to extend infinitely outside the bounds
                 content
-                    .padding(radius * 2) // padding for organic bleed
-                    .blur(radius: currentRadius)
-                    .padding(-radius * 2)
                     .mask(
                         LinearGradient(
                             stops: [
@@ -44,6 +38,9 @@ public struct ProgressiveBleedBlur: ViewModifier {
                             endPoint: endPoint(for: direction)
                         )
                     )
+                    .padding(radius * 2) // padding for organic bleed
+                    .blur(radius: currentRadius)
+                    .padding(-radius * 2)
             }
         }
     }

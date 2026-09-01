@@ -23,20 +23,27 @@ using namespace metal;
     // Calculate how far the current pixel is from the wave crest
     float distFromWave = distance - waveRadius;
     
+    // EARLY EXIT OPTIMIZATION: If the pixel is completely outside the wave, skip all math!
+    // waveWidth * 1.5 ensures we don't clip the outer chromatic aberration split
+    if (abs(distFromWave) > waveWidth * 1.5) {
+        return currentColor;
+    }
+    
     // Chromatic aberration split (offsetting the wave crest for R, G, B)
     float split = 3.0; 
-    float valR = (distFromWave - split) / waveWidth;
-    float intensityR = exp(-(valR * valR));
+    // Use fast hardware smoothstep instead of exp for better performance
+    float valR = abs(distFromWave - split) / waveWidth;
+    float intensityR = smoothstep(1.0, 0.0, valR);
     
-    float valG = distFromWave / waveWidth;
-    float intensityG = exp(-(valG * valG));
+    float valG = abs(distFromWave) / waveWidth;
+    float intensityG = smoothstep(1.0, 0.0, valG);
     
-    float valB = (distFromWave + split) / waveWidth;
-    float intensityB = exp(-(valB * valB));
+    float valB = abs(distFromWave + split) / waveWidth;
+    float intensityB = smoothstep(1.0, 0.0, valB);
     
     // Subtle specular highlight exactly at the crest
-    float valS = distFromWave / (waveWidth * 0.15);
-    float specular = exp(-(valS * valS)) * 0.15;
+    float valS = abs(distFromWave) / (waveWidth * 0.15);
+    float specular = smoothstep(1.0, 0.0, valS) * 0.15;
     
     // Fade out as it expands
     float fade = 1.0 - time;
@@ -60,11 +67,17 @@ using namespace metal;
     chromaticLight += float3(specular);
     chromaticLight = clamp(chromaticLight, 0.0, 1.0);
     
-    // Blend the shiny chromatic ripple over the current color
-    float3 newColor = mix(currentF.rgb, chromaticLight, clamp(blendAlpha, 0.0, 1.0));
+    // Proper premultiplied alpha blending (Source-Over)
+    // chromaticLight is our unpremultiplied source color, blendAlpha is source alpha
+    float3 sourceRGB = chromaticLight * blendAlpha;
     
-    // Increase alpha so the ripple is visible even on transparent backgrounds
-    float newAlpha = clamp(currentF.a + blendAlpha, 0.0, 1.0);
+    // currentF is our destination (already premultiplied)
+    float3 newColor = sourceRGB + currentF.rgb * (1.0 - blendAlpha);
+    float newAlpha = blendAlpha + currentF.a * (1.0 - blendAlpha);
+    
+    // CRITICAL: SwiftUI expects valid premultiplied alpha. 
+    // If any RGB component exceeds Alpha, it causes a yellow error box or crash.
+    newColor = clamp(newColor, 0.0, newAlpha);
     
     return half4(newColor.r, newColor.g, newColor.b, newAlpha);
 }

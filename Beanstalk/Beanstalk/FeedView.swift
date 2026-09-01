@@ -498,11 +498,8 @@ struct ArticleRowView: View {
                     .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 3)
                 }
                 .padding(.trailing, 24)
-                .padding(.bottom, 64) // Above the grab handle
+                .padding(.bottom, 24)
             }
-            
-            // Bottom Grab Handle
-            grabHandle()
         }
         .background {
             // Full card background: #F5F5F5 base + blurred image on top
@@ -573,6 +570,11 @@ struct ArticleRowView: View {
             }
             .padding(.top, 240) // Shift content below the sharp image
             
+            // Bottom Grab Handle for Swiping Cards (below buttons in Z-index)
+            if isExpanded {
+                grabHandle()
+            }
+            
             // 3. Action Buttons Overlay
             if isExpanded {
                 VStack {
@@ -641,9 +643,6 @@ struct ArticleRowView: View {
                 }
                 .opacity(showActions ? 1 : 0)
             }
-            
-            // Bottom Grab Handle for Swiping Cards
-            grabHandle()
         }
         .background(alignment: .top) {
             if let image = image {

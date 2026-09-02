@@ -41,7 +41,9 @@ struct LoadingView: View {
             if newValue == .loading {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                     if appState == .loading {
-                        appState = .feed
+                        withAnimation(.spring(response: 0.7, dampingFraction: 0.8)) {
+                            appState = .feed
+                        }
                     }
                 }
             }

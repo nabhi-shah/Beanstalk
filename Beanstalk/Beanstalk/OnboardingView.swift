@@ -85,7 +85,9 @@ struct OnboardingView: View {
                                 onNext: {
                                     // Let the ripple effect play for 0.4s
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                                        appState = .loading
+                                        withAnimation(.spring(response: 0.7, dampingFraction: 0.8)) {
+                                            appState = .loading
+                                        }
                                     }
                                 }
                             )

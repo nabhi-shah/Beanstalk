@@ -161,6 +161,7 @@ struct FeedContentView: View {
                     .scaledToFit()
                     .frame(height: 24)
                     .matchedGeometryEffect(id: "logo", in: animationNamespace)
+                    .transition(.identity)
                     .padding(.top, 4)
                     .padding(.bottom, 8)
                 Spacer()
@@ -277,7 +278,6 @@ struct ArticleRowView: View {
                     }
                 )
                 .overlay(RoundedRectangle(cornerRadius: 42, style: .continuous).stroke(Color(red: 223/255, green: 223/255, blue: 223/255), lineWidth: 0.5))
-                .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
                 .scaleEffect(x: c2.scaleX, y: c2.scaleY)
                     .offset(x: c2.xOffset)
                     .opacity(c2.opacity)
@@ -314,7 +314,6 @@ struct ArticleRowView: View {
                     }
                 )
                 .overlay(RoundedRectangle(cornerRadius: 42, style: .continuous).stroke(Color(red: 223/255, green: 223/255, blue: 223/255), lineWidth: 0.5))
-                .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
                 .scaleEffect(x: c1.scaleX, y: c1.scaleY)
                 .offset(x: c1.xOffset)
                 .opacity(c1.opacity)
@@ -354,7 +353,6 @@ struct ArticleRowView: View {
                     RoundedRectangle(cornerRadius: 42, style: .continuous)
                         .stroke(Color(red: 223/255, green: 223/255, blue: 223/255), lineWidth: 0.5)
                 )
-                .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
                 .scaleEffect(x: c0.scaleX, y: c0.scaleY)
                 .offset(x: c0.xOffset)
                 .opacity(c0.opacity)
@@ -511,9 +509,8 @@ struct ArticleRowView: View {
                     }
                     .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.3)))
                     .background(
-                        Circle().glassEffect(.regular.tint(Color.white.opacity(0.4)), in: .circle)
+                        Circle().fill(Color.white)
                     )
-                    .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 3)
                 }
                 .padding(.trailing, 24)
                 .padding(.bottom, 24)
@@ -603,7 +600,6 @@ struct ArticleRowView: View {
                             .frame(width: 32, height: 32)
                             .background(Color.white)
                             .clipShape(Circle())
-                            .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
                         
                         VStack(alignment: .leading, spacing: 2) {
                             Text(article.publication)
@@ -681,7 +677,6 @@ struct ArticleRowView: View {
                             .frame(width: 32, height: 32)
                             .background(Color.white)
                             .clipShape(Circle())
-                            .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
                         
                         VStack(alignment: .leading, spacing: 2) {
                             Text(article.publication)
@@ -781,9 +776,8 @@ struct ArticleRowView: View {
                         }
                         .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.3)))
                         .background(
-                            Circle().glassEffect(.regular.tint(Color.white.opacity(0.4)), in: .circle)
+                            Circle().fill(Color.white)
                         )
-                        .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 3)
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 24)
@@ -821,10 +815,6 @@ struct ArticleRowView: View {
         }
         .onTapGesture {
             if !isExpanded {
-                isPressed = true
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    isPressed = false
-                }
                 onToggle()
             }
         }
@@ -905,7 +895,7 @@ struct ArticleRowView: View {
         }
         .background(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .glassEffect(.regular.tint(.white.opacity(0.1)), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+                .fill(Color.white)
         )
         .padding(.horizontal, 12)
     }

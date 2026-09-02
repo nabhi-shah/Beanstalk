@@ -34,6 +34,64 @@
             endingLineNumber = "4"
             landmarkName = "ContentView"
             landmarkType = "14">
+            <Locations>
+               <Location
+                  uuid = "F1E32827-2164-4D83-9952-DB1F9FAEBD27 - 815d9e0096b6558a"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Beanstalk.ContentView.appState.getter : Beanstalk.AppState"
+                  moduleName = "Beanstalk.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/nabhi/Desktop/Projects/Beanstalk/Beanstalk/Beanstalk/ContentView.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "4"
+                  endingLineNumber = "4">
+               </Location>
+               <Location
+                  uuid = "F1E32827-2164-4D83-9952-DB1F9FAEBD27 - e788883ef6709c76"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Beanstalk.ContentView.appState.setter : Beanstalk.AppState"
+                  moduleName = "Beanstalk.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/nabhi/Desktop/Projects/Beanstalk/Beanstalk/Beanstalk/ContentView.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "4"
+                  endingLineNumber = "4">
+               </Location>
+               <Location
+                  uuid = "F1E32827-2164-4D83-9952-DB1F9FAEBD27 - 1e4b3cd76bd21389"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Beanstalk.ContentView.appState.modify : Beanstalk.AppState"
+                  moduleName = "Beanstalk.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/nabhi/Desktop/Projects/Beanstalk/Beanstalk/Beanstalk/ContentView.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "4"
+                  endingLineNumber = "4">
+               </Location>
+               <Location
+                  uuid = "F1E32827-2164-4D83-9952-DB1F9FAEBD27 - 116e59cd8244c34e"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Beanstalk.ContentView.$appState.getter : SwiftUI.Binding&lt;Beanstalk.AppState&gt;"
+                  moduleName = "Beanstalk.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/nabhi/Desktop/Projects/Beanstalk/Beanstalk/Beanstalk/ContentView.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "4"
+                  endingLineNumber = "4">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

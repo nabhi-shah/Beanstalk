@@ -46,7 +46,7 @@ struct FeedView: View {
                     switch tab {
                     case .home: return "cards-three"
                     case .search: return "magnifying-glass"
-                    case .saved: return "bookmark"
+                    case .saved: return "Bookmarks"
                     case .profile: return "user-circle"
                     }
                 }()
@@ -183,8 +183,28 @@ struct ArticleRowView: View {
     @State private var frontCardIndex: Int = 0
     @State private var dragOffset: CGFloat = 0
     @State private var isLongPressing: Bool = false
+    @State private var showChevrons: Bool = false
+    @State private var chatInputText: String = ""
     
     private func cardMetrics(for index: Int) -> (zIndex: Double, scaleX: CGFloat, scaleY: CGFloat, xOffset: CGFloat, opacity: Double) {
+        if !isExpanded {
+            if frontCardIndex != 0 {
+                if index == frontCardIndex {
+                    return (zIndex: 2, scaleX: 1.0, scaleY: 1.0, xOffset: UIScreen.main.bounds.width, opacity: 1.0)
+                } else if index == 0 {
+                    return (zIndex: 1, scaleX: 1.0, scaleY: 1.0, xOffset: 0, opacity: 1.0)
+                } else {
+                    return (zIndex: 0, scaleX: 1.0, scaleY: 1.0, xOffset: 0, opacity: 0.0)
+                }
+            } else {
+                if index == 0 {
+                    return (zIndex: 2, scaleX: 1.0, scaleY: 1.0, xOffset: 0, opacity: 1.0)
+                } else {
+                    return (zIndex: 0, scaleX: 1.0, scaleY: 1.0, xOffset: 0, opacity: 0.0)
+                }
+            }
+        }
+        
         let isFront = index == frontCardIndex
         let isSecond = index == (frontCardIndex + 1) % 3
         
@@ -229,18 +249,36 @@ struct ArticleRowView: View {
             ZStack {
                 // Card 2
                 let c2 = cardMetrics(for: 2)
-                RoundedRectangle(cornerRadius: 42, style: .continuous)
-                    .fill(Color(red: 205/255, green: 205/255, blue: 205/255))
-                    .overlay(RoundedRectangle(cornerRadius: 42, style: .continuous).stroke(Color(red: 223/255, green: 223/255, blue: 223/255), lineWidth: 0.5))
-                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
-                    .overlay(
-                        Group {
-                            if isExpanded {
-                                grabHandle()
+                Group {
+                    if let url = article.thumbnailURL {
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .success(let image): chatCard(image: image)
+                            case .empty, .failure: chatCard(image: nil)
+                            @unknown default: chatCard(image: nil)
                             }
                         }
-                    )
-                    .scaleEffect(x: c2.scaleX, y: c2.scaleY)
+                    } else {
+                        chatCard(image: nil)
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
+                .overlay(
+                    Color.white.opacity(0.01)
+                        .modifier(RippleModifier(rippleColor: Color.black.opacity(0.4), touchLocation: touchLocation, isPressed: isPressed && frontCardIndex == 2))
+                        .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
+                        .allowsHitTesting(false)
+                )
+                .background(
+                    TouchLocatingView { location in
+                        if !isPressed && frontCardIndex == 2 {
+                            touchLocation = location
+                        }
+                    }
+                )
+                .overlay(RoundedRectangle(cornerRadius: 42, style: .continuous).stroke(Color(red: 223/255, green: 223/255, blue: 223/255), lineWidth: 0.5))
+                .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+                .scaleEffect(x: c2.scaleX, y: c2.scaleY)
                     .offset(x: c2.xOffset)
                     .opacity(c2.opacity)
                     .zIndex(c2.zIndex)
@@ -264,8 +302,8 @@ struct ArticleRowView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
                 .overlay(
                     Color.white.opacity(0.01)
-                        .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
                         .modifier(RippleModifier(rippleColor: Color.black.opacity(0.4), touchLocation: touchLocation, isPressed: isPressed && frontCardIndex == 1))
+                        .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
                         .allowsHitTesting(false)
                 )
                 .background(
@@ -301,8 +339,8 @@ struct ArticleRowView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
                 .overlay(
                     Color.white.opacity(0.01)
-                        .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
                         .modifier(RippleModifier(rippleColor: Color.black.opacity(0.4), touchLocation: touchLocation, isPressed: isPressed && frontCardIndex == 0))
+                        .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
                         .allowsHitTesting(false)
                 )
                 .background(
@@ -346,6 +384,24 @@ struct ArticleRowView: View {
                 .animation(.easeInOut(duration: 0.2), value: frontCardIndex)
             }
         }
+        .onChange(of: isLongPressing) { oldValue, newValue in
+            if newValue {
+                withAnimation(.easeIn(duration: 0.2)) {
+                    showChevrons = true
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
+                    if isLongPressing {
+                        withAnimation(.easeOut(duration: 0.4)) {
+                            showChevrons = false
+                        }
+                    }
+                }
+            } else {
+                withAnimation(.easeOut(duration: 0.2)) {
+                    showChevrons = false
+                }
+            }
+        }
         .onChange(of: isExpanded) { oldValue, newValue in
             if newValue {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -355,7 +411,12 @@ struct ArticleRowView: View {
                 }
             } else {
                 showActions = false
-                withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                if frontCardIndex != 0 {
+                    // Delay reset so the card can slide out right during collapse
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        frontCardIndex = 0
+                    }
+                } else {
                     frontCardIndex = 0
                 }
             }
@@ -382,105 +443,49 @@ struct ArticleRowView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     // Spacer to clear the fixed header area
                     Spacer()
-                        .frame(height: 120)
-                    
-                    // Publication & Author
-                    HStack(spacing: 12) {
-                        Image(article.publication)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 32, height: 32)
-                            .background(Color.white)
-                            .clipShape(Circle())
-                            .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(article.publication)
-                                .font(.custom("InclusiveSans-Regular", size: 16))
-                                .foregroundColor(.textDark)
-                                .bold()
-                            
-                            if !article.author.isEmpty {
-                                Text(article.author)
-                                    .font(.custom("InclusiveSans-Regular", size: 14))
-                                    .foregroundColor(.textSecondary)
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 24)
-                    
-                    // Title
-                    Text(article.title)
-                        .font(.custom("InclusiveSans-Regular", size: 18))
-                        .foregroundColor(.textDark)
-                        .bold()
-                        .padding(.horizontal, 24)
+                        .frame(height: 190)
                     
                     // Article Content
-                    Text(article.content)
-                        .font(.custom("InclusiveSans-Regular", size: 16))
-                        .foregroundColor(.textSecondary)
-                        .lineSpacing(4)
-                        .padding(.horizontal, 24)
-                        .padding(.bottom, 120) // Space for FAB and dots
+                    if let parsedStr = try? AttributedString(markdown: article.content) {
+                        let attrStr: AttributedString = {
+                            var str = parsedStr
+                            var breakIndices = [AttributedString.Index]()
+                            for (intent, range) in str.runs[\.presentationIntent] {
+                                if let intent = intent {
+                                    if range.upperBound < str.endIndex {
+                                        breakIndices.append(range.upperBound)
+                                    }
+                                    for component in intent.components {
+                                        if case .header(let level) = component.kind {
+                                            let size: CGFloat = level == 1 ? 24 : (level == 2 ? 22 : 20)
+                                            str[range].font = .system(size: size, weight: .bold)
+                                        }
+                                    }
+                                }
+                            }
+                            for index in breakIndices.sorted(by: >) {
+                                str.insert(AttributedString("\n\n"), at: index)
+                            }
+                            return str
+                        }()
+                        Text(attrStr)
+                            .foregroundColor(Color(white: 0.35))
+                            .lineSpacing(6)
+                            .padding(.horizontal, 24)
+                            .padding(.bottom, 120) // Space for FAB and dots
+                    } else {
+                        Text(article.content)
+                            .foregroundColor(Color(white: 0.35))
+                            .lineSpacing(6)
+                            .padding(.horizontal, 24)
+                            .padding(.bottom, 120) // Space for FAB and dots
+                    }
                 }
                 .padding(.top, 16)
             }
             
             // Fixed Header overlay (sits above ScrollView)
-            ZStack(alignment: .top) {
-                // Progressive blur behind the header to fade the scrolling text
-                ProgressiveBlurView(height: 140, edge: .top)
-                    .allowsHitTesting(false)
-                
-                // Sharp Thumbnail Image
-                if let image = image {
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(height: 120)
-                        .clipped()
-                }
-                
-                // Action Buttons Overlay
-                HStack {
-                    Button(action: onToggle) {
-                        Image("CaretLeft")
-                            .renderingMode(.template)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 20, height: 20)
-                            .foregroundColor(.textDark)
-                            .frame(width: 44, height: 44)
-                            .background(Circle().fill(Color.white.opacity(0.01)))
-                            .contentShape(Circle())
-                    }
-                    .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.3)))
-                    .background(
-                        Circle().glassEffect(.regular.tint(.white.opacity(0.25)), in: .circle)
-                    )
-                    
-                    Spacer()
-                    
-                    Button(action: { }) {
-                        Image("bookmark-simple")
-                            .renderingMode(.template)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 20, height: 20)
-                            .foregroundColor(.textDark)
-                            .frame(width: 44, height: 44)
-                            .background(Circle().fill(Color.white.opacity(0.01)))
-                            .contentShape(Circle())
-                    }
-                    .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.3)))
-                    .background(
-                        Circle().glassEffect(.regular.tint(.white.opacity(0.25)), in: .circle)
-                    )
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 24)
-            }
+            articleHeaderView(image: image)
             
             // Bottom Grab Handle for Swiping Cards (only when expanded)
             // Rendered before the FAB so it doesn't blur the button
@@ -506,7 +511,7 @@ struct ArticleRowView: View {
                     }
                     .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.3)))
                     .background(
-                        Circle().glassEffect(.regular.tint(.white.opacity(0.25)), in: .circle)
+                        Circle().glassEffect(.regular.tint(Color.white.opacity(0.4)), in: .circle)
                     )
                     .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 3)
                 }
@@ -517,7 +522,7 @@ struct ArticleRowView: View {
         .background {
             // Full card background: #F5F5F5 base + blurred image on top
             ZStack {
-                Color(red: 245/255, green: 245/255, blue: 245/255)
+                Color.white
                 
                 if let image = image {
                     image
@@ -525,9 +530,139 @@ struct ArticleRowView: View {
                         .aspectRatio(contentMode: .fill)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .figmaLayerBlur(radius: 24)
-                        .opacity(0.26)
+                        .opacity(0.16)
                 }
             }
+        }
+    }
+    
+    @ViewBuilder
+    private func articleHeaderView(image: Image?) -> some View {
+        ZStack(alignment: .top) {
+            // Progressive blur behind the header to fade the scrolling text
+            ProgressiveBlurView(height: 210, edge: .top)
+                .allowsHitTesting(false)
+            
+            VStack(alignment: .leading, spacing: 0) {
+                ZStack(alignment: .top) {
+                    // Sharp Thumbnail Image
+                    if let image = image {
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(height: 92)
+                            .clipped()
+                    }
+                    
+                    // Action Buttons Overlay
+                    HStack {
+                        Button(action: onToggle) {
+                            Image("CaretLeft")
+                                .renderingMode(.template)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 20, height: 20)
+                                .foregroundColor(.textDark)
+                                .frame(width: 44, height: 44)
+                                .background(Circle().fill(Color.white.opacity(0.01)))
+                                .contentShape(Circle())
+                        }
+                        .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.3)))
+                        .background(
+                            Circle().glassEffect(.regular.tint(Color.white.opacity(0.4)), in: .circle)
+                        )
+                        
+                        Spacer()
+                        
+                        Button(action: { }) {
+                            Image("bookmark-simple")
+                                .renderingMode(.template)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 20, height: 20)
+                                .foregroundColor(.textDark)
+                                .frame(width: 44, height: 44)
+                                .background(Circle().fill(Color.white.opacity(0.01)))
+                                .contentShape(Circle())
+                        }
+                        .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.3)))
+                        .background(
+                            Circle().glassEffect(.regular.tint(Color.white.opacity(0.4)), in: .circle)
+                        )
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 24)
+                }
+                
+                VStack(alignment: .leading, spacing: 12) {
+                    // Publication & Author
+                    HStack(spacing: 12) {
+                        Image(article.publication)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 32, height: 32)
+                            .background(Color.white)
+                            .clipShape(Circle())
+                            .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(article.publication)
+                                .font(.custom("InclusiveSans-Regular", size: 16))
+                                .foregroundColor(.textDark)
+                                .bold()
+                            
+                            if !article.author.isEmpty {
+                                Text(article.author)
+                                    .font(.custom("InclusiveSans-Regular", size: 14))
+                                    .foregroundColor(.textSecondary)
+                            }
+                        }
+                    }
+                    
+                    // Title
+                    Text(article.title)
+                        .font(.custom("InclusiveSans-Regular", size: 18))
+                        .foregroundColor(.textDark)
+                        .bold()
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 24)
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private func chatCard(image: Image?) -> some View {
+        ZStack {
+            if isExpanded {
+                // Bottom Grab Handle for Swiping Cards
+                // Rendered before the content so it doesn't blur the chat input
+                grabHandle()
+                
+                VStack(spacing: 0) {
+                    articleHeaderView(image: image)
+                    Spacer()
+                    chatInputView()
+                        .padding(.bottom, 48) // Snug against the grab handle area
+                }
+            }
+        }
+        .background {
+            // Full card background: #F5F5F5 base + blurred image on top
+            ZStack {
+                Color.white
+                
+                if let image = image {
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .figmaLayerBlur(radius: 24)
+                        .opacity(0.16)
+                        .clipped()
+                }
+            }
+            .ignoresSafeArea(.all, edges: [])
         }
     }
 
@@ -569,8 +704,7 @@ struct ArticleRowView: View {
                     
                     if isExpanded {
                         Text(article.aiSummary)
-                            .font(.custom("InclusiveSans-Regular", size: 16))
-                            .foregroundColor(.textSecondary)
+                            .foregroundColor(Color(white: 0.35))
                             .lineSpacing(4)
                             .padding(.top, 8)
                             .transition(.opacity.combined(with: .move(edge: .bottom)))
@@ -605,7 +739,7 @@ struct ArticleRowView: View {
                         }
                         .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.3)))
                         .background(
-                            Circle().glassEffect(.regular.tint(.white.opacity(0.25)), in: .circle)
+                            Circle().glassEffect(.regular.tint(Color.white.opacity(0.4)), in: .circle)
                         )
                         
                         Spacer()
@@ -623,7 +757,7 @@ struct ArticleRowView: View {
                         }
                         .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.3)))
                         .background(
-                            Circle().glassEffect(.regular.tint(.white.opacity(0.25)), in: .circle)
+                            Circle().glassEffect(.regular.tint(Color.white.opacity(0.4)), in: .circle)
                         )
                     }
                     .padding(.horizontal, 24)
@@ -647,7 +781,7 @@ struct ArticleRowView: View {
                         }
                         .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.3)))
                         .background(
-                            Circle().glassEffect(.regular.tint(.white.opacity(0.25)), in: .circle)
+                            Circle().glassEffect(.regular.tint(Color.white.opacity(0.4)), in: .circle)
                         )
                         .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 3)
                     }
@@ -663,7 +797,7 @@ struct ArticleRowView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 290)
+                    .frame(height: 270)                    .frame(height: 270)
                     .clipped()
                     .progressiveBleedBlur(radius: 24, offset: 0.75, direction: .bottom, steps: 7)
             } else {
@@ -673,7 +807,7 @@ struct ArticleRowView: View {
         .background {
             // Full card background: #F5F5F5 base + blurred image on top
             ZStack {
-                Color(red: 245/255, green: 245/255, blue: 245/255)
+                Color.white
                 
                 if let image = image {
                     image
@@ -681,7 +815,7 @@ struct ArticleRowView: View {
                         .aspectRatio(contentMode: .fill)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .figmaLayerBlur(radius: 24)
-                        .opacity(0.26)
+                        .opacity(0.16)
                 }
             }
         }
@@ -706,28 +840,74 @@ struct ArticleRowView: View {
                 ProgressiveBlurView(height: 64, edge: .bottom)
                     .allowsHitTesting(false)
                 
-                VStack(spacing: 8) {
-                    VStack(spacing: 3) {
-                        HStack(spacing: 3) {
-                            Circle().frame(width: 3, height: 3)
-                            Circle().frame(width: 3, height: 3)
-                            Circle().frame(width: 3, height: 3)
-                        }
-                        HStack(spacing: 3) {
-                            Circle().frame(width: 3, height: 3)
-                            Circle().frame(width: 3, height: 3)
-                            Circle().frame(width: 3, height: 3)
-                        }
+                HStack(spacing: 40) {
+                    if showChevrons {
+                        ShimmerChevron(isLeft: true, isAnimating: $showChevrons)
+                            .transition(.opacity)
                     }
-                    .foregroundColor(Color.textSecondary.opacity(0.4))
+                    
+                    VStack(spacing: 8) {
+                        VStack(spacing: 3) {
+                            HStack(spacing: 3) {
+                                Circle().frame(width: 3, height: 3)
+                                Circle().frame(width: 3, height: 3)
+                                Circle().frame(width: 3, height: 3)
+                            }
+                            HStack(spacing: 3) {
+                                Circle().frame(width: 3, height: 3)
+                                Circle().frame(width: 3, height: 3)
+                                Circle().frame(width: 3, height: 3)
+                            }
+                        }
+                        .foregroundColor(Color.textSecondary.opacity(0.4))
+                    }
+                    .frame(height: 32)
+                    
+                    if showChevrons {
+                        ShimmerChevron(isLeft: false, isAnimating: $showChevrons)
+                            .transition(.opacity)
+                    }
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 32)
                 .background(Color.white.opacity(0.001))
                 .contentShape(Rectangle())
                 .overlay(carouselGestureLayer()) // Gesture is now ONLY at the bottom
             }
         }
+    }
+    
+    @ViewBuilder
+    private func chatInputView() -> some View {
+        HStack(alignment: .bottom, spacing: 12) {
+            TextField("Chat with the article...", text: $chatInputText, axis: .vertical)
+                .font(.custom("InclusiveSans-Regular", size: 16))
+                .foregroundColor(.textDark)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 16)
+                .frame(minHeight: 56)
+                .lineLimit(1...5)
+            
+            Button(action: {
+                chatInputText = ""
+            }) {
+                ZStack {
+                    Circle()
+                        .fill(chatInputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? Color(red: 40/255, green: 40/255, blue: 40/255) : Color.brandGreen)
+                        .frame(width: 44, height: 44)
+                    
+                    Image(systemName: "arrow.up")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(.white)
+                }
+            }
+            .padding(.trailing, 6)
+            .padding(.bottom, 6)
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .glassEffect(.regular.tint(.white.opacity(0.1)), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        )
+        .padding(.horizontal, 12)
     }
     
     @ViewBuilder
@@ -794,6 +974,66 @@ extension View {
             self.gesture(gesture)
         } else {
             self
+        }
+    }
+}
+
+struct ShimmerChevron: View {
+    var isLeft: Bool
+    @Binding var isAnimating: Bool
+    
+    @State private var shimmerPhase: CGFloat = 0
+    
+    private var baseChevron: some View {
+        HStack(spacing: -5) {
+            ForEach(0..<4, id: \.self) { _ in
+                Image(systemName: isLeft ? "chevron.compact.left" : "chevron.compact.right")
+                    .font(.system(size: 18, weight: .heavy))
+            }
+        }
+    }
+    
+    var body: some View {
+        baseChevron
+            .foregroundColor(Color.textSecondary.opacity(0.2))
+            .overlay(
+                LinearGradient(
+                    gradient: Gradient(stops: [
+                        .init(color: .clear, location: 0.0),
+                        .init(color: Color.textSecondary, location: 0.4),
+                        .init(color: .white, location: 0.5),
+                        .init(color: Color.textSecondary, location: 0.6),
+                        .init(color: .clear, location: 1.0)
+                    ]),
+                    startPoint: UnitPoint(x: shimmerPhase, y: 0),
+                    endPoint: UnitPoint(x: shimmerPhase + 0.5, y: 0)
+                )
+                .mask(baseChevron)
+            )
+            .offset(y: -2)
+            .onChange(of: isAnimating) { oldValue, newValue in
+                if newValue {
+                    runShimmer()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                        if isAnimating { runShimmer() }
+                    }
+                } else {
+                    shimmerPhase = isLeft ? 1.5 : -0.5
+                }
+            }
+            .onAppear {
+                shimmerPhase = isLeft ? 1.5 : -0.5
+            }
+    }
+    
+    private func runShimmer() {
+        // Force reset without animation
+        withAnimation(.none) {
+            shimmerPhase = isLeft ? 1.5 : -0.5
+        }
+        
+        withAnimation(.linear(duration: 1.0)) {
+            shimmerPhase = isLeft ? -0.5 : 1.5
         }
     }
 }

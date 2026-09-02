@@ -25,3 +25,4 @@ struct Article: Identifiable {
         }
     }
 }
+

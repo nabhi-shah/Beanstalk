@@ -126,7 +126,7 @@ struct ContentView: View {
             }
             .buttonStyle(RippleButtonStyle(rippleColor: Color.white.opacity(0.4)))
             .background(
-                Capsule()
+                Color.clear
                     .glassEffect(.regular.tint(Color.brandGreen.opacity(0.6)), in: .capsule)
             )
             .padding(.top, 8)

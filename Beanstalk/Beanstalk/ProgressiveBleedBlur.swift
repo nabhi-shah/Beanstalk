@@ -6,7 +6,7 @@ public struct ProgressiveBleedBlur: ViewModifier {
     public var direction: Edge
     public var steps: Int
     
-    public init(radius: CGFloat, offset: CGFloat = 0.0, direction: Edge = .bottom, steps: Int = 12) {
+    public init(radius: CGFloat, offset: CGFloat = 0.0, direction: Edge = .bottom, steps: Int = 4) {
         self.radius = radius
         self.offset = offset
         self.direction = direction
@@ -82,7 +82,7 @@ public struct ProgressiveBleedBlur: ViewModifier {
 }
 
 public extension View {
-    func progressiveBleedBlur(radius: CGFloat, offset: CGFloat = 0.0, direction: Edge = .bottom, steps: Int = 12) -> some View {
+    func progressiveBleedBlur(radius: CGFloat, offset: CGFloat = 0.0, direction: Edge = .bottom, steps: Int = 4) -> some View {
         modifier(ProgressiveBleedBlur(radius: radius, offset: offset, direction: direction, steps: steps))
     }
 }

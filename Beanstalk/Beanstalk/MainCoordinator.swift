@@ -18,15 +18,6 @@ struct LoadingView: View {
                 Color.appBackground.ignoresSafeArea()
                     .transition(.opacity)
                 
-                Image("BeanstalkLogo")
-                    .renderingMode(.original)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 36)
-                    .matchedGeometryEffect(id: "logo", in: animationNamespace)
-                    .padding(.top, 40)
-                    .transition(.identity)
-                
                 VStack {
                     Spacer()
                     ProgressView()
@@ -53,10 +44,12 @@ struct LoadingView: View {
 
 struct MainCoordinator: View {
     @State private var appState: AppState = .login
+    @State private var selectedArticle: Article? = nil
+    @State private var selectedTab: MainTab = .home
     @Namespace private var animationNamespace
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             if appState == .login {
                 ContentView(appState: $appState, animationNamespace: animationNamespace)
                     .transition(.opacity)
@@ -67,14 +60,35 @@ struct MainCoordinator: View {
                 .zIndex(1)
                 .allowsHitTesting(appState == .onboarding)
             
-            LoadingView(appState: $appState, animationNamespace: animationNamespace)
+            FeedView(appState: $appState, selectedArticle: $selectedArticle, selectedTab: $selectedTab, animationNamespace: animationNamespace)
                 .zIndex(2)
+                .allowsHitTesting(appState == .feed)
+            
+            LoadingView(appState: $appState, animationNamespace: animationNamespace)
+                .zIndex(3)
                 .allowsHitTesting(appState == .loading)
             
-            if appState == .feed {
-                FeedView(appState: $appState, animationNamespace: animationNamespace)
-                    .transition(.opacity)
-                    .zIndex(3)
+            if appState == .onboarding || appState == .loading || appState == .feed {
+                VStack(spacing: 0) {
+                    HStack {
+                        Spacer()
+                        Image("BeanstalkLogo")
+                            .renderingMode(.original)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: appState == .feed ? 24 : 36)
+                            .matchedGeometryEffect(id: "logo", in: animationNamespace)
+                        Spacer()
+                    }
+                    .padding(.top, appState == .feed ? 4 : 40)
+                    .padding(.bottom, appState == .feed ? 8 : 0)
+                    
+                    Spacer()
+                }
+                .opacity((selectedArticle != nil || (appState == .feed && selectedTab != .home)) ? 0 : 1)
+                .animation(.easeInOut(duration: 0.3), value: (selectedArticle != nil || (appState == .feed && selectedTab != .home)))
+                .zIndex(100)
+                .allowsHitTesting(false)
             }
         }
         .animation(.spring(response: 0.7, dampingFraction: 0.8), value: appState)

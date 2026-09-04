@@ -4,6 +4,7 @@ struct RippleModifier: ViewModifier {
     var rippleColor: Color
     var touchLocation: CGPoint?
     var isPressed: Bool
+    var duration: Double = 1.25
     
     @State private var progress: CGFloat = 1.0
     
@@ -23,7 +24,7 @@ struct RippleModifier: ViewModifier {
             .onChange(of: isPressed) { oldValue, newValue in
                 if newValue {
                     progress = 0.0
-                    withAnimation(.easeOut(duration: 1.5)) {
+                    withAnimation(.easeOut(duration: duration)) {
                         progress = 1.0
                     }
                 }

@@ -22,16 +22,6 @@ struct OnboardingView: View {
                 Color.appBackground.ignoresSafeArea()
                     .transition(.opacity)
                 
-                // Logo that animates in
-                Image("BeanstalkLogo")
-                    .renderingMode(.original)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 36)
-                    .matchedGeometryEffect(id: "logo", in: animationNamespace)
-                    .padding(.top, 40)
-                    .transition(.identity)
-                
                 // Bottom Sheet
             VStack(spacing: 0) {
                 Spacer().frame(height: 140) // Space for logo

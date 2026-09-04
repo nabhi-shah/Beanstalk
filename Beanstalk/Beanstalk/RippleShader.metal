@@ -3,81 +3,63 @@
 using namespace metal;
 
 [[ stitchable ]] half4 lightRipple(float2 position, half4 currentColor, float2 touchPos, float time, float2 size, half4 rippleColor) {
-    // Convert to float for safer math on A-series GPUs
-    float4 currentF = float4(currentColor);
-    float4 rippleF = float4(rippleColor);
-    
-    // Distance from the exact touch point
-    float distance = length(position - touchPos);
-    
-    // The maximum distance the wave needs to travel is roughly the diagonal of the view
-    float maxDist = length(size);
-    
-    // The current radius of the expanding wave based on the animation progress (time from 0 to 1)
-    float waveRadius = time * maxDist * 1.5;
-    
-    // The thickness of the ripple ring
-    float waveWidth = maxDist * 0.3;
-    if (waveWidth < 30.0) waveWidth = 30.0;
-    
-    // Calculate how far the current pixel is from the wave crest
-    float distFromWave = distance - waveRadius;
-    
-    // EARLY EXIT OPTIMIZATION: If the pixel is completely outside the wave, skip all math!
-    // waveWidth * 1.5 ensures we don't clip the outer chromatic aberration split
-    if (abs(distFromWave) > waveWidth * 1.5) {
+    // 1. Instant early exit: if ripple is inactive, pixel is transparent, or ripple has no alpha
+    if (time >= 1.0f || time < 0.0f || currentColor.a <= 0.001h || rippleColor.a <= 0.001h) {
         return currentColor;
     }
     
-    // Chromatic aberration split (offsetting the wave crest for R, G, B)
-    float split = 3.0; 
-    // Use fast hardware smoothstep instead of exp for better performance
-    float valR = abs(distFromWave - split) / waveWidth;
-    float intensityR = smoothstep(1.0, 0.0, valR);
+    // 2. Precompute wave parameters in native FP16 on Apple Silicon (2x throughput vs FP32)
+    half hTime = half(time);
+    half fade = 1.0h - hTime;
     
-    float valG = abs(distFromWave) / waveWidth;
-    float intensityG = smoothstep(1.0, 0.0, valG);
+    // Fast hardware distance calculations
+    half distance = half(fast::distance(position, touchPos));
+    half maxDist = half(fast::length(size));
+    half waveRadius = hTime * maxDist * 1.3h;
     
-    float valB = abs(distFromWave + split) / waveWidth;
-    float intensityB = smoothstep(1.0, 0.0, valB);
+    // Wave width and precomputed reciprocal for single-cycle multiplication (replaces 3 divisions)
+    half waveWidth = max(maxDist * 0.22h, 24.0h);
+    half invWaveWidth = 1.0h / waveWidth;
     
-    // Subtle specular highlight exactly at the crest
-    float valS = abs(distFromWave) / (waveWidth * 0.15);
-    float specular = smoothstep(1.0, 0.0, valS) * 0.15;
+    half distFromWave = distance - waveRadius;
     
-    // Fade out as it expands
-    float fade = 1.0 - time;
-    
-    // The base envelope for the ripple visibility
-    float envelope = max(max(intensityR, intensityG), intensityB);
-    float blendAlpha = envelope * fade * rippleF.a * 0.8;
-    
-    // Only apply light to visible pixels to preserve shapes
-    if (currentF.a == 0.0) {
+    // 3. Spatial bounding exit: if pixel is outside the wave crest envelope, skip all further math
+    if (abs(distFromWave) > waveWidth * 1.2h) {
         return currentColor;
     }
     
-    // Create the chromatic light
-    float3 chromaticLight = float3(intensityR, intensityG, intensityB);
+    // 4. Subtle chromatic aberration split using fast smoothstep and reciprocal multiplication
+    half split = 1.0h;
+    half valR = abs(distFromWave - split) * invWaveWidth;
+    half intensityR = smoothstep(1.0h, 0.0h, valR);
     
-    // Tint it slightly with the requested ripple color to keep branding
-    chromaticLight = mix(chromaticLight, rippleF.rgb, 0.5);
+    half valG = abs(distFromWave) * invWaveWidth;
+    half intensityG = smoothstep(1.0h, 0.0h, valG);
     
-    // Add specular highlight
-    chromaticLight += float3(specular);
-    chromaticLight = clamp(chromaticLight, 0.0, 1.0);
+    half valB = abs(distFromWave + split) * invWaveWidth;
+    half intensityB = smoothstep(1.0h, 0.0h, valB);
     
-    // Proper premultiplied alpha blending (Source-Over)
-    // chromaticLight is our unpremultiplied source color, blendAlpha is source alpha
-    float3 sourceRGB = chromaticLight * blendAlpha;
+    // 5. Soft, subtle specular highlight at the wave crest
+    half valS = abs(distFromWave) * (invWaveWidth * 6.6667h); // 1.0 / 0.15 = ~6.6667
+    half specular = smoothstep(1.0h, 0.0h, valS) * 0.10h;
     
-    // currentF is our destination (already premultiplied)
-    float3 newColor = sourceRGB + currentF.rgb * (1.0 - blendAlpha);
-    float newAlpha = blendAlpha + currentF.a * (1.0 - blendAlpha);
+    // 6. Base envelope & early exit if imperceptible (balanced power for visible yet elegant ripple)
+    half envelope = max(max(intensityR, intensityG), intensityB);
+    half blendAlpha = envelope * fade * rippleColor.a * 0.6h;
     
-    // CRITICAL: SwiftUI expects valid premultiplied alpha. 
-    // If any RGB component exceeds Alpha, it causes a yellow error box or crash.
-    newColor = clamp(newColor, 0.0, newAlpha);
+    if (blendAlpha <= 0.001h) {
+        return currentColor;
+    }
     
-    return half4(newColor.r, newColor.g, newColor.b, newAlpha);
+    // 7. Chromatic light color tinting
+    half3 chromaticLight = half3(intensityR, intensityG, intensityB);
+    chromaticLight = mix(chromaticLight, rippleColor.rgb, 0.6h);
+    chromaticLight += half3(specular);
+    chromaticLight = clamp(chromaticLight, 0.0h, 1.0h);
+    
+    // 8. Blend the shiny chromatic ripple over the current color
+    half3 newColor = mix(currentColor.rgb, chromaticLight, clamp(blendAlpha, 0.0h, 1.0h));
+    half newAlpha = clamp(currentColor.a + blendAlpha, 0.0h, 1.0h);
+    
+    return half4(newColor, newAlpha);
 }

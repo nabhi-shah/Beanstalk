@@ -13,15 +13,24 @@ struct ScrollOffsetKey: PreferenceKey {
 
 struct FeedView: View {
     @Binding var appState: AppState
+    @Binding var selectedArticle: Article?
+    @Binding var selectedTab: MainTab
     var animationNamespace: Namespace.ID
     
-    @State private var selectedTab: MainTab = .home
     @State private var minimizeProgress: Double = 0
-    @State private var selectedArticle: Article?
     @Namespace private var heroAnimation
     
+    init(appState: Binding<AppState>, selectedArticle: Binding<Article?>? = nil, selectedTab: Binding<MainTab>? = nil, animationNamespace: Namespace.ID) {
+        self._appState = appState
+        self._selectedArticle = selectedArticle ?? .constant(nil)
+        self._selectedTab = selectedTab ?? .constant(.home)
+        self.animationNamespace = animationNamespace
+    }
+    
     var body: some View {
-        NavigationStack {
+        ZStack(alignment: .top) {
+            if appState == .feed {
+                NavigationStack {
             UnionTabView(
                 selection: $selectedTab, 
                 tabs: [.home, .search, .saved, .profile], 
@@ -34,8 +43,7 @@ struct FeedView: View {
                     .overlay(Text("Search").foregroundColor(.textSecondary))
                     .unionTab(MainTab.search)
                 
-                Color.appBackground.ignoresSafeArea()
-                    .overlay(Text("Saved").foregroundColor(.textSecondary))
+                SavedView()
                     .unionTab(MainTab.saved)
                 
                 Color.appBackground.ignoresSafeArea()
@@ -71,8 +79,10 @@ struct FeedView: View {
             }
             .toolbar(.hidden, for: .navigationBar)
         }
-        .tint(.brandGreen)
-        
+            .transition(.opacity)
+            .tint(.brandGreen)
+            }
+        }
     }
 }
 
@@ -152,22 +162,7 @@ struct FeedContentView: View {
                 .opacity(selectedArticle != nil ? 0 : 1)
                 .animation(.easeInOut(duration: 0.3), value: selectedArticle?.id)
 
-            // Custom Header
-            HStack {
-                Spacer()
-                Image("BeanstalkLogo")
-                    .renderingMode(.original)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 24)
-                    .matchedGeometryEffect(id: "logo", in: animationNamespace)
-                    .transition(.identity)
-                    .padding(.top, 4)
-                    .padding(.bottom, 8)
-                Spacer()
-            }
-            .opacity(selectedArticle != nil ? 0 : 1)
-            .animation(.easeInOut(duration: 0.3), value: selectedArticle?.id)
+
         }
     }
 }
@@ -186,6 +181,7 @@ struct ArticleRowView: View {
     @State private var isLongPressing: Bool = false
     @State private var showChevrons: Bool = false
     @State private var chatInputText: String = ""
+    @State private var isAnnotationModeActive: Bool = false
     
     private func cardMetrics(for index: Int) -> (zIndex: Double, scaleX: CGFloat, scaleY: CGFloat, xOffset: CGFloat, opacity: Double) {
         if !isExpanded {
@@ -266,7 +262,7 @@ struct ArticleRowView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
                 .overlay(
                     Color.white.opacity(0.01)
-                        .modifier(RippleModifier(rippleColor: Color.black.opacity(0.4), touchLocation: touchLocation, isPressed: isPressed && frontCardIndex == 2))
+                        .modifier(RippleModifier(rippleColor: Color.black.opacity(0.35), touchLocation: touchLocation, isPressed: isPressed && frontCardIndex == 2))
                         .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
                         .allowsHitTesting(false)
                 )
@@ -302,7 +298,7 @@ struct ArticleRowView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
                 .overlay(
                     Color.white.opacity(0.01)
-                        .modifier(RippleModifier(rippleColor: Color.black.opacity(0.4), touchLocation: touchLocation, isPressed: isPressed && frontCardIndex == 1))
+                        .modifier(RippleModifier(rippleColor: Color.black.opacity(0.35), touchLocation: touchLocation, isPressed: isPressed && frontCardIndex == 1))
                         .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
                         .allowsHitTesting(false)
                 )
@@ -338,7 +334,7 @@ struct ArticleRowView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
                 .overlay(
                     Color.white.opacity(0.01)
-                        .modifier(RippleModifier(rippleColor: Color.black.opacity(0.4), touchLocation: touchLocation, isPressed: isPressed && frontCardIndex == 0))
+                        .modifier(RippleModifier(rippleColor: Color.black.opacity(0.35), touchLocation: touchLocation, isPressed: isPressed && frontCardIndex == 0))
                         .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
                         .allowsHitTesting(false)
                 )
@@ -409,6 +405,7 @@ struct ArticleRowView: View {
                 }
             } else {
                 showActions = false
+                isAnnotationModeActive = false
                 if frontCardIndex != 0 {
                     // Delay reset so the card can slide out right during collapse
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
@@ -431,6 +428,81 @@ struct ArticleRowView: View {
         // Screen height - safeTop - safeBottom - 20 (dots) - 12 (spacing)
         let calculated = UIScreen.main.bounds.height - safeTop - safeBottom - 32
         return max(calculated, 600) // Ensure it doesn't get ridiculously small on tiny screens
+    }
+    
+    @ViewBuilder
+    private func annotationModeButton() -> some View {
+        Button(action: {
+            withAnimation(.bouncy(duration: 0.48, extraBounce: 0.18)) {
+                if isAnnotationModeActive {
+                    isAnnotationModeActive = false
+                } else {
+                    isAnnotationModeActive = true
+                }
+            }
+        }) {
+            HStack(spacing: 12) {
+                if isAnnotationModeActive {
+                    Text("Annotation Mode")
+                        .font(.custom("InclusiveSans-Regular", size: 16))
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+                        .fixedSize()
+                        .padding(.leading, 20)
+                        .transition(.opacity.combined(with: .scale(scale: 0.85)))
+                    
+                    Image(systemName: "xmark")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.trailing, 18)
+                        .transition(.opacity.combined(with: .scale(scale: 0.85)))
+                } else {
+                    Image("PencilSimpleLine")
+                        .renderingMode(.template)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 24, height: 24)
+                        .foregroundColor(.textDark)
+                        .transition(.opacity.combined(with: .scale(scale: 0.85)))
+                }
+            }
+            .frame(height: 56)
+            .frame(minWidth: 56)
+            .background(
+                ZStack {
+                    // Visible base fill ensuring contrast and full alpha for ripple
+                    Capsule(style: .continuous)
+                        .fill(isAnnotationModeActive ? Color(red: 24/255, green: 24/255, blue: 24/255) : Color.white)
+                    
+                    // Liquid glass sheen overlay
+                    Color.clear
+                        .glassEffect(
+                            .regular.tint(
+                                isAnnotationModeActive
+                                    ? Color.black.opacity(0.3)
+                                    : Color.white.opacity(0.2)
+                            ),
+                            in: .capsule
+                        )
+                    
+                    // Subtle perimeter stroke
+                    Capsule(style: .continuous)
+                        .stroke(
+                            isAnnotationModeActive ? Color.white.opacity(0.14) : Color.black.opacity(0.06),
+                            lineWidth: 0.5
+                        )
+                }
+            )
+            .clipShape(Capsule(style: .continuous))
+            .contentShape(Capsule(style: .continuous))
+        }
+        .buttonStyle(RippleButtonStyle(rippleColor: isAnnotationModeActive ? Color.white.opacity(0.4) : Color.black.opacity(0.3)))
+        .shadow(
+            color: Color.black.opacity(isAnnotationModeActive ? 0.22 : 0.10),
+            radius: isAnnotationModeActive ? 10 : 6,
+            x: 0,
+            y: isAnnotationModeActive ? 5 : 3
+        )
     }
     
     @ViewBuilder
@@ -487,8 +559,9 @@ struct ArticleRowView: View {
             
             // Bottom Grab Handle for Swiping Cards (only when expanded)
             // Rendered before the FAB so it doesn't blur the button
-            if isExpanded {
+            if isExpanded && !isAnnotationModeActive {
                 grabHandle()
+                    .transition(.opacity)
             }
             
             // Floating Action Button (FAB)
@@ -496,21 +569,7 @@ struct ArticleRowView: View {
                 Spacer()
                 HStack {
                     Spacer()
-                    Button(action: {}) {
-                        Image("PencilSimpleLine")
-                            .renderingMode(.template)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 24, height: 24)
-                            .foregroundColor(.textSecondary)
-                            .frame(width: 56, height: 56)
-                            .background(Circle().fill(Color.white.opacity(0.01)))
-                            .contentShape(Circle())
-                    }
-                    .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.3)))
-                    .background(
-                        Circle().fill(Color.white)
-                    )
+                    annotationModeButton()
                 }
                 .padding(.trailing, 24)
                 .padding(.bottom, 24)
@@ -526,7 +585,7 @@ struct ArticleRowView: View {
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .figmaLayerBlur(radius: 24)
+                        .figmaLayerBlur(radius: 19)
                         .opacity(0.16)
                 }
             }
@@ -566,7 +625,8 @@ struct ArticleRowView: View {
                         }
                         .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.3)))
                         .background(
-                            Circle().glassEffect(.regular.tint(Color.white.opacity(0.4)), in: .circle)
+                            Color.clear
+                                .glassEffect(.regular.tint(Color.white.opacity(0.4)), in: .circle)
                         )
                         
                         Spacer()
@@ -584,7 +644,8 @@ struct ArticleRowView: View {
                         }
                         .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.3)))
                         .background(
-                            Circle().glassEffect(.regular.tint(Color.white.opacity(0.4)), in: .circle)
+                            Color.clear
+                                .glassEffect(.regular.tint(Color.white.opacity(0.4)), in: .circle)
                         )
                     }
                     .padding(.horizontal, 24)
@@ -631,13 +692,21 @@ struct ArticleRowView: View {
     private func chatCard(image: Image?) -> some View {
         ZStack {
             if isExpanded {
-                // Bottom Grab Handle for Swiping Cards
-                // Rendered before the content so it doesn't blur the chat input
-                grabHandle()
+                if !isAnnotationModeActive {
+                    // Bottom Grab Handle for Swiping Cards
+                    // Rendered before the content so it doesn't blur the chat input
+                    grabHandle()
+                        .transition(.opacity)
+                }
                 
                 VStack(spacing: 0) {
                     articleHeaderView(image: image)
-                    Spacer()
+                    
+                    // Middle swipeable area in chat card
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .overlay(carouselGestureLayer())
+                    
                     chatInputView()
                         .padding(.bottom, 48) // Snug against the grab handle area
                 }
@@ -653,7 +722,7 @@ struct ArticleRowView: View {
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .figmaLayerBlur(radius: 24)
+                        .figmaLayerBlur(radius: 19)
                         .opacity(0.16)
                         .clipped()
                 }
@@ -713,8 +782,9 @@ struct ArticleRowView: View {
             .padding(.top, 240) // Shift content below the sharp image
             
             // Bottom Grab Handle for Swiping Cards (below buttons in Z-index)
-            if isExpanded {
+            if isExpanded && !isAnnotationModeActive {
                 grabHandle()
+                    .transition(.opacity)
             }
             
             // 3. Action Buttons Overlay
@@ -734,7 +804,8 @@ struct ArticleRowView: View {
                         }
                         .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.3)))
                         .background(
-                            Circle().glassEffect(.regular.tint(Color.white.opacity(0.4)), in: .circle)
+                            Color.clear
+                                .glassEffect(.regular.tint(Color.white.opacity(0.4)), in: .circle)
                         )
                         
                         Spacer()
@@ -752,7 +823,8 @@ struct ArticleRowView: View {
                         }
                         .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.3)))
                         .background(
-                            Circle().glassEffect(.regular.tint(Color.white.opacity(0.4)), in: .circle)
+                            Color.clear
+                                .glassEffect(.regular.tint(Color.white.opacity(0.4)), in: .circle)
                         )
                     }
                     .padding(.horizontal, 24)
@@ -762,22 +834,7 @@ struct ArticleRowView: View {
                     
                     HStack {
                         Spacer()
-                        
-                        Button(action: {}) {
-                            Image("PencilSimpleLine")
-                                .renderingMode(.template)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 24, height: 24)
-                                .foregroundColor(.textSecondary)
-                                .frame(width: 56, height: 56)
-                                .background(Circle().fill(Color.white.opacity(0.01)))
-                                .contentShape(Circle())
-                        }
-                        .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.3)))
-                        .background(
-                            Circle().fill(Color.white)
-                        )
+                        annotationModeButton()
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 24)
@@ -791,9 +848,9 @@ struct ArticleRowView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 270)                    .frame(height: 270)
+                    .frame(height: 270)
                     .clipped()
-                    .progressiveBleedBlur(radius: 24, offset: 0.75, direction: .bottom, steps: 7)
+                    .progressiveBleedBlur(radius: 24, offset: 0.75, direction: .bottom, steps: 4)
             } else {
                 Color.clear.frame(height: 400)
             }
@@ -808,18 +865,21 @@ struct ArticleRowView: View {
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .figmaLayerBlur(radius: 24)
+                        .figmaLayerBlur(radius: 19)
                         .opacity(0.16)
                 }
             }
         }
-        .onTapGesture {
+        .onTapGesture(coordinateSpace: .local) { location in
             if !isExpanded {
+                touchLocation = location
                 isPressed = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     isPressed = false
                 }
-                onToggle()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    onToggle()
+                }
             }
         }
     }
@@ -831,7 +891,7 @@ struct ArticleRowView: View {
             
             ZStack(alignment: .bottom) {
                 // Progressive blur behind the grabber
-                ProgressiveBlurView(height: 64, edge: .bottom)
+                ProgressiveBlurView(height: 52, edge: .bottom)
                     .allowsHitTesting(false)
                 
                 HStack(spacing: 40) {
@@ -855,14 +915,17 @@ struct ArticleRowView: View {
                         }
                         .foregroundColor(Color.textSecondary.opacity(0.4))
                     }
-                    .frame(height: 32)
+                    .frame(height: 24)
                     
                     if showChevrons {
                         ShimmerChevron(isLeft: false, isAnimating: $showChevrons)
                             .transition(.opacity)
                     }
                 }
+                .frame(height: 24)
+                .padding(.bottom, 10)
                 .frame(maxWidth: .infinity)
+                .frame(height: 52, alignment: .bottom)
                 .background(Color.white.opacity(0.001))
                 .contentShape(Rectangle())
                 .overlay(carouselGestureLayer()) // Gesture is now ONLY at the bottom
@@ -907,40 +970,41 @@ struct ArticleRowView: View {
     @ViewBuilder
     private func carouselGestureLayer() -> some View {
         Color.white.opacity(0.001)
-            .conditionalGesture(true, 
-                // Use minimumDistance 15 so it doesn't block vertical scrolling on ScrollViews
-                DragGesture(minimumDistance: 15)
+            .contentShape(Rectangle())
+            .highPriorityGesture(
+                DragGesture(minimumDistance: 0)
                     .onChanged { value in
+                        guard !isAnnotationModeActive else { return }
+                        
+                        if !isLongPressing {
+                            let cardX = value.startLocation.x
+                            let cardY = expandedCardHeight - 26
+                            touchLocation = CGPoint(x: cardX, y: cardY)
+                            isPressed = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                isPressed = false
+                            }
+                            withAnimation(.spring(response: 0.25, dampingFraction: 0.65)) {
+                                isLongPressing = true
+                            }
+                        }
+                        
                         dragOffset = value.translation.width
                     }
                     .onEnded { value in
-                        withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                        guard !isAnnotationModeActive else { return }
+                        let predicted = value.predictedEndTranslation.width
+                        withAnimation(.spring(response: 0.45, dampingFraction: 0.75)) {
                             isLongPressing = false
-                            if dragOffset > 50 {
+                            if dragOffset > 40 || predicted > 80 {
                                 frontCardIndex = (frontCardIndex - 1 + 3) % 3
-                            } else if dragOffset < -50 {
+                            } else if dragOffset < -40 || predicted < -80 {
                                 frontCardIndex = (frontCardIndex + 1) % 3
                             }
                             dragOffset = 0
                         }
                     }
             )
-            .onLongPressGesture(minimumDuration: 0, pressing: { isPressing in
-                if isPressing {
-                    withAnimation(.spring(response: 0.05, dampingFraction: 0.6)) {
-                        isLongPressing = true
-                    }
-                    isPressed = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        isPressed = false
-                    }
-                } else if !isPressing && dragOffset == 0 {
-                    // Only revert if we haven't started dragging
-                    withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
-                        isLongPressing = false
-                    }
-                }
-            }, perform: {})
     }
 }
 

@@ -18,8 +18,8 @@ struct OnboardingBottomNav: View {
             }
             .buttonStyle(RippleButtonStyle(rippleColor: Color.textSecondary.opacity(0.2)))
             .background(
-                Capsule()
-                    .glassEffect(.regular.tint(Color.secondaryBackground.opacity(0)), in: .capsule)
+                Color.clear
+                    .glassEffect(.regular, in: .capsule)
             )
             
             Button(action: onNext) {
@@ -34,7 +34,7 @@ struct OnboardingBottomNav: View {
             .disabled(!isNextEnabled)
             .buttonStyle(RippleButtonStyle(rippleColor: Color.white.opacity(0.3)))
             .background(
-                Capsule()
+                Color.clear
                     .glassEffect(.regular.tint(isNextEnabled ? Color.brandGreen.opacity(0.6) : Color.textSecondary.opacity(0.2)), in: .capsule)
             )
         }

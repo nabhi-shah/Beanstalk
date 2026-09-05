@@ -114,10 +114,10 @@ struct NoteDisplayMenuView: View {
                 .lineLimit(isSingleLine ? 1 : 4)
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: isSingleLine, vertical: !isSingleLine)
-                .padding(.leading, 16)
+                .padding(.leading, 14)
                 .padding(.vertical, 8)
             
-            Spacer(minLength: 4)
+            Spacer(minLength: 6)
             
             Button(action: {
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
@@ -126,7 +126,7 @@ struct NoteDisplayMenuView: View {
                 ZStack {
                     Circle()
                         .fill(Color(red: 0.95, green: 0.26, blue: 0.21))
-                        .frame(width: 28, height: 28)
+                        .frame(width: 30, height: 30)
                     
                     Image("trash")
                         .renderingMode(.template)
@@ -138,9 +138,9 @@ struct NoteDisplayMenuView: View {
                 .contentShape(Circle())
             }
             .buttonStyle(.plain)
-            .frame(width: 36, height: 36)
+            .frame(width: 30, height: 30)
             .contentShape(Circle())
-            .padding(.trailing, 8)
+            .padding(.trailing, 4)
         }
         .padding(.bottom, isAbove ? 8 : 0)
         .padding(.top, isAbove ? 0 : 8)
@@ -486,7 +486,7 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
             
             // Calculate accurate dimensions for the fit-text note view capsule
             let font = UIFont(name: "InclusiveSans-Regular", size: 15) ?? UIFont.systemFont(ofSize: 15)
-            let horizontalPadding: CGFloat = 88 // 16 leading + 8 spacing + 4 minSpacer + 8 spacing + 36 btn + 8 trailing + 8 safety buffer
+            let horizontalPadding: CGFloat = 68 // 14 leading + 6 minSpacer + 30 btn + 4 trailing + 14 breathing room
             
             let singleLineSize = (noteContent as NSString).size(withAttributes: [.font: font])
             let singleLineWidth = ceil(singleLineSize.width)
@@ -497,7 +497,7 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
             let contentHeight: CGFloat
             
             if isSingleLine {
-                contentWidth = max(100, singleLineWidth + horizontalPadding)
+                contentWidth = max(92, singleLineWidth + horizontalPadding)
                 contentHeight = 46
             } else {
                 let maxTextWidth = maxAvailableWidth - horizontalPadding

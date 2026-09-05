@@ -108,7 +108,7 @@ struct NoteDisplayMenuView: View {
     var onDelete: () -> Void
     
     var body: some View {
-        HStack(alignment: .center, spacing: 8) {
+        HStack(alignment: .bottom, spacing: 8) {
             Text(noteText)
                 .font(.custom("InclusiveSans-Regular", size: 15))
                 .foregroundColor(.textDark)
@@ -117,6 +117,7 @@ struct NoteDisplayMenuView: View {
                 .fixedSize(horizontal: isSingleLine, vertical: !isSingleLine)
                 .padding(.leading, 14)
                 .padding(.vertical, 8)
+                .frame(maxHeight: .infinity, alignment: isSingleLine ? .leading : .topLeading)
             
             Spacer(minLength: 6)
             
@@ -142,6 +143,7 @@ struct NoteDisplayMenuView: View {
             .frame(width: 30, height: 30)
             .contentShape(Circle())
             .padding(.trailing, 4)
+            .padding(.bottom, 4)
         }
         .padding(.bottom, isAbove ? 8 : 0)
         .padding(.top, isAbove ? 0 : 8)

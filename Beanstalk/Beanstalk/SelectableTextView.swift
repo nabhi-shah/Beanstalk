@@ -296,22 +296,27 @@ struct CustomMenuView: View {
     }
     
     private var noteContentView: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ScrollView(.vertical, showsIndicators: true) {
-                TextField("Add Note....", text: $noteText, axis: .vertical)
-                    .font(.custom("InclusiveSans-Regular", size: 16))
-                    .focused($isFocused)
-                    .foregroundColor(.textDark)
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
+        ZStack(alignment: .bottom) {
+            // Text input area fills the top portion
+            VStack {
+                ScrollView(.vertical, showsIndicators: true) {
+                    TextField("Add Note....", text: $noteText, axis: .vertical)
+                        .font(.custom("InclusiveSans-Regular", size: 16))
+                        .focused($isFocused)
+                        .foregroundColor(.textDark)
+                        .frame(maxWidth: .infinity, alignment: .topLeading)
+                }
+                .scrollDismissesKeyboard(.never)
+                .frame(maxHeight: 56)
+                .padding(.horizontal, 16)
+                .padding(.top, isAbove ? 12 : 16)
+                
+                Spacer()
             }
-            .frame(maxHeight: 56)
-            .padding(.horizontal, 16)
-            .padding(.top, isAbove ? 12 : 16)
             
-            Spacer(minLength: 0)
-            
+            // Buttons overlaid at bottom — highest Z-order, always tappable
             HStack {
-                // Cancel button — plain View, no SwiftUI Button
+                // Cancel button
                 ZStack {
                     Circle()
                         .fill(Color.black.opacity(0.06))
@@ -326,13 +331,15 @@ struct CustomMenuView: View {
                 }
                 .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
-                .onTapGesture { cancelNote() }
+                .highPriorityGesture(
+                    TapGesture().onEnded { cancelNote() }
+                )
                 .padding(.leading, 8)
                 .padding(.bottom, isAbove ? 12 : 6)
                 
                 Spacer()
                 
-                // Check / submit button — plain View, no SwiftUI Button
+                // Check / submit button
                 ZStack {
                     Circle()
                         .fill(isCheckDisabled ? Color.black.opacity(0.06) : Color.brandGreen)
@@ -347,10 +354,13 @@ struct CustomMenuView: View {
                 }
                 .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
-                .onTapGesture { submitNote() }
+                .highPriorityGesture(
+                    TapGesture().onEnded { submitNote() }
+                )
                 .padding(.trailing, 8)
                 .padding(.bottom, isAbove ? 12 : 6)
             }
+            .allowsHitTesting(true)
         }
         .frame(width: 285, height: 128)
     }
@@ -425,14 +435,14 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
     }
     
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
-        if let host = activeActionHostingController, host.view.frame.contains(point) {
+        if let host = activeActionHostingController, host.view.frame.insetBy(dx: -8, dy: -8).contains(point) {
             let converted = convert(point, to: host.view)
             if let hit = host.view.hitTest(converted, with: event) {
                 return hit
             }
             return host.view
         }
-        if let host = customMenuHostingController, host.view.frame.contains(point) {
+        if let host = customMenuHostingController, host.view.frame.insetBy(dx: -8, dy: -8).contains(point) {
             let converted = convert(point, to: host.view)
             if let hit = host.view.hitTest(converted, with: event) {
                 return hit
@@ -820,6 +830,8 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
         let host = UIHostingController(rootView: menuView)
         host.view.backgroundColor = .clear
         host.view.frame = pos.frame
+        host.view.isUserInteractionEnabled = true
+        host.view.clipsToBounds = false
         host.view.transform = CGAffineTransform(scaleX: 0.88, y: 0.88)
         host.view.alpha = 0
         self.addSubview(host.view)

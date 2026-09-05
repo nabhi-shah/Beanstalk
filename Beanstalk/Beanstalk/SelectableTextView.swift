@@ -217,7 +217,13 @@ struct CustomMenuView: View {
         .onChange(of: isAddingNote) { _, adding in
             onSizeChange(CGSize(width: targetWidth, height: targetHeight))
             if adding {
-                isFocused = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    if isAddingNote {
+                        isFocused = true
+                    }
+                }
+            } else {
+                isFocused = false
             }
         }
     }
@@ -275,7 +281,11 @@ struct CustomMenuView: View {
                     .font(.custom("InclusiveSans-Regular", size: 16))
                     .focused($isFocused)
                     .foregroundColor(.textDark)
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .topLeading)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        isFocused = true
+                    }
             }
             .padding(.horizontal, 16)
             .padding(.top, isAbove ? 14 : 18)
@@ -316,6 +326,7 @@ struct CustomMenuView: View {
                 Button(action: {
                     guard !isCheckDisabled else { return }
                     UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                    isFocused = false
                     onAddNote(noteText)
                 }) {
                     ZStack {
@@ -663,6 +674,7 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
     }
     
     func updateCustomMenuPosition(for range: NSRange) {
+        if pendingNoteRange != nil { return }
         guard let host = customMenuHostingController else { return }
         self.currentMenuRange = range
         
@@ -683,7 +695,7 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
             },
             onAddNote: { [weak self] noteText in
                 guard let self = self, let note = noteText, !note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-                let selRange = self.currentMenuRange ?? range
+                let selRange = self.pendingNoteRange ?? self.currentMenuRange ?? range
                 self.pendingNoteRange = nil
                 let greyColor = UIColor(red: 0.58, green: 0.62, blue: 0.67, alpha: 1.0)
                 if let idx = self.currentHighlights.firstIndex(where: { $0.range == selRange }) {
@@ -712,10 +724,10 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
             },
             onSizeChange: { [weak self] newSize in
                 guard let self = self, let host = self.customMenuHostingController else { return }
-                let r = self.currentMenuRange ?? range
+                let r = self.pendingNoteRange ?? self.currentMenuRange ?? range
                 let p = self.menuPosition(for: r, menuSize: newSize)
                 
-                UIView.animate(withDuration: 0.35, delay: 0, usingSpringWithDamping: 0.76, initialSpringVelocity: 0.1, options: [.curveEaseInOut, .allowUserInteraction]) {
+                UIView.animate(withDuration: 0.35, delay: 0, usingSpringWithDamping: 0.76, initialSpringVelocity: 0.1, options: [.curveEaseInOut, .allowUserInteraction, .beginFromCurrentState]) {
                     host.view.frame = p.frame
                 }
             }
@@ -729,6 +741,7 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
     }
     
     func showCustomMenu(for range: NSRange) {
+        if pendingNoteRange != nil { return }
         hideCustomMenu()
         hideActionMenu()
         
@@ -751,7 +764,7 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
             },
             onAddNote: { [weak self] noteText in
                 guard let self = self, let note = noteText, !note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-                let selRange = self.currentMenuRange ?? range
+                let selRange = self.pendingNoteRange ?? self.currentMenuRange ?? range
                 self.pendingNoteRange = nil
                 let greyColor = UIColor(red: 0.58, green: 0.62, blue: 0.67, alpha: 1.0)
                 if let idx = self.currentHighlights.firstIndex(where: { $0.range == selRange }) {
@@ -780,10 +793,10 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
             },
             onSizeChange: { [weak self] newSize in
                 guard let self = self, let host = self.customMenuHostingController else { return }
-                let r = self.currentMenuRange ?? range
+                let r = self.pendingNoteRange ?? self.currentMenuRange ?? range
                 let p = self.menuPosition(for: r, menuSize: newSize)
                 
-                UIView.animate(withDuration: 0.35, delay: 0, usingSpringWithDamping: 0.76, initialSpringVelocity: 0.1, options: [.curveEaseInOut, .allowUserInteraction]) {
+                UIView.animate(withDuration: 0.35, delay: 0, usingSpringWithDamping: 0.76, initialSpringVelocity: 0.1, options: [.curveEaseInOut, .allowUserInteraction, .beginFromCurrentState]) {
                     host.view.frame = p.frame
                 }
             }

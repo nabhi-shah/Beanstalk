@@ -296,73 +296,58 @@ struct CustomMenuView: View {
     }
     
     private var noteContentView: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 0) {
             ScrollView(.vertical, showsIndicators: true) {
                 TextField("Add Note....", text: $noteText, axis: .vertical)
                     .font(.custom("InclusiveSans-Regular", size: 16))
                     .focused($isFocused)
                     .foregroundColor(.textDark)
-                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .topLeading)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        isFocused = true
-                    }
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
             }
+            .frame(maxHeight: 56)
             .padding(.horizontal, 16)
-            .padding(.top, isAbove ? 14 : 18)
+            .padding(.top, isAbove ? 12 : 16)
             
             Spacer(minLength: 0)
             
             HStack {
-                Button(action: {
-                    cancelNote()
-                }) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.black.opacity(0.06))
-                            .frame(width: 38, height: 38)
-                        
-                        Image("x")
-                            .renderingMode(.template)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 14, height: 14)
-                            .foregroundColor(Color.textDark)
-                    }
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
+                // Cancel button — plain View, no SwiftUI Button
+                ZStack {
+                    Circle()
+                        .fill(Color.black.opacity(0.06))
+                        .frame(width: 38, height: 38)
+                    
+                    Image("x")
+                        .renderingMode(.template)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 14, height: 14)
+                        .foregroundColor(Color.textDark)
                 }
-                .buttonStyle(.plain)
-                .simultaneousGesture(TapGesture().onEnded {
-                    cancelNote()
-                })
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+                .onTapGesture { cancelNote() }
                 .padding(.leading, 8)
                 .padding(.bottom, isAbove ? 12 : 6)
                 
                 Spacer()
                 
-                Button(action: {
-                    submitNote()
-                }) {
-                    ZStack {
-                        Circle()
-                            .fill(isCheckDisabled ? Color.black.opacity(0.06) : Color.brandGreen)
-                            .frame(width: 38, height: 38)
-                        
-                        Image("check")
-                            .renderingMode(.template)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 16, height: 16)
-                            .foregroundColor(isCheckDisabled ? Color.textSecondary.opacity(0.35) : .white)
-                    }
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
+                // Check / submit button — plain View, no SwiftUI Button
+                ZStack {
+                    Circle()
+                        .fill(isCheckDisabled ? Color.black.opacity(0.06) : Color.brandGreen)
+                        .frame(width: 38, height: 38)
+                    
+                    Image("check")
+                        .renderingMode(.template)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 16, height: 16)
+                        .foregroundColor(isCheckDisabled ? Color.textSecondary.opacity(0.35) : .white)
                 }
-                .buttonStyle(.plain)
-                .simultaneousGesture(TapGesture().onEnded {
-                    submitNote()
-                })
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+                .onTapGesture { submitNote() }
                 .padding(.trailing, 8)
                 .padding(.bottom, isAbove ? 12 : 6)
             }

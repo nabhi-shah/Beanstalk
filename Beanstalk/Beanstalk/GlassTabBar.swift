@@ -147,6 +147,7 @@ struct GlassTabBar<Tab: TabItem, TabItemContent: View>: View {
         }
         .padding(4)
         .glassEffect(.regular.interactive(), in: .capsule)
+        .shadow(color: Color.black.opacity(0.15), radius: 14, x: 0, y: 4)
         .contentShape(Rectangle())
     }
 }

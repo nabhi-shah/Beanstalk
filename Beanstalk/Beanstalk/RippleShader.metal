@@ -63,3 +63,38 @@ using namespace metal;
     
     return half4(newColor, newAlpha);
 }
+
+// Directional metallic shimmer wave across chevrons
+[[ stitchable ]] half4 chevronShimmer(float2 position, half4 currentColor, float progress, float2 size, float isLeft) {
+    if (currentColor.a <= 0.001h || progress < 0.0f || progress > 1.0f) {
+        return currentColor;
+    }
+    
+    // Normalized position across chevron width
+    float normX = size.x > 0.0f ? (position.x / size.x) : 0.0f;
+    
+    // If isLeft > 0.5 (left <<<<), sweep right-to-left towards the outer edge
+    // If right (>>>>), sweep left-to-right towards the outer edge
+    float dirX = isLeft > 0.5f ? (1.0f - normX) : normX;
+    
+    // Light band center traverses smoothly from -0.35 to 1.35
+    float bandCenter = mix(-0.35f, 1.35f, progress);
+    float bandHalfWidth = 0.32f;
+    float dist = abs(dirX - bandCenter);
+    
+    if (dist >= bandHalfWidth) {
+        return currentColor;
+    }
+    
+    // Smooth bell-curve light intensity
+    float normDist = dist / bandHalfWidth;
+    float intensity = smoothstep(1.0f, 0.0f, normDist);
+    
+    // Clean bright highlight
+    half3 sheenColor = half3(1.0h, 1.0h, 1.0h);
+    half3 outRgb = mix(currentColor.rgb, sheenColor, half(intensity * 0.95h));
+    half outAlpha = clamp(currentColor.a + half(intensity * 0.75h), 0.0h, 1.0h);
+    
+    return half4(outRgb, outAlpha);
+}
+

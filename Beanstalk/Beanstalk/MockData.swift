@@ -36,7 +36,7 @@ Candidates from both sides of the aisle are taking note. Several high-profile co
 Ultimately, what was once a niche zoning issue has exploded onto the national stage, forcing candidates to answer a difficult question: how do we balance the demands of the future with the resources of today?
 """,
             aiSummary: "Politicians from both major parties are increasingly campaigning against the construction of new data centers as local opposition grows due to environmental and infrastructural concerns, making it a surprising issue in the midterm elections.",
-            thumbnailURLString: "https://static01.nyt.com/images/2026/08/23/multimedia/23data-centers-promo-hp-hltm/23data-centers-promo-hp-hltm-mediumSquareAt3X.jpg"
+            thumbnailURLString: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=1200&auto=format&fit=crop"
         ),
         Article(
             publication: "NY Times",
@@ -57,7 +57,7 @@ However, the engagement generated significant backlash among the Democratic base
 The meeting also created an awkward situation for House Speaker Mike Johnson, who is focused on maintaining the Republican majority and sought to distance the White House from Kushner’s independent efforts.
 """,
             aiSummary: "In a rare moment of bipartisan discussion amidst heated midterm campaigns, Jared Kushner and Hakeem Jeffries held a private meeting to explore potential avenues of cooperation between a prospective Democratic-led House and the current administration.",
-            thumbnailURLString: "https://static01.nyt.com/images/2026/08/23/us/promo-hakeem/promo-hakeem-mediumSquareAt3X.png"
+            thumbnailURLString: "https://images.unsplash.com/photo-1541872703-74c5e44368f9?q=80&w=1200&auto=format&fit=crop"
         ),
         Article(
             publication: "NY Times",
@@ -82,7 +82,7 @@ Several core issues have galvanized the electorate this cycle:
 As both parties pour millions into the state, Ohio is once again proving that it can never be entirely written off by either side.
 """,
             aiSummary: "Driven by widespread frustration and a feeling of powerlessness, Ohio voters are poised to make the traditionally Republican-leaning state highly competitive in the upcoming elections, with major implications for control of the House and Senate.",
-            thumbnailURLString: "https://static01.nyt.com/images/2026/08/23/multimedia/23nat-ohio-politics-top-bkgv/23nat-ohio-politics-top-bkgv-mediumSquareAt3X.jpg"
+            thumbnailURLString: "https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?q=80&w=1200&auto=format&fit=crop"
         ),
         Article(
             publication: "CNBC",
@@ -107,7 +107,7 @@ Beyond route expansions, Kirby detailed how artificial intelligence is transform
 While challenges remain, including regulatory scrutiny over proposed mergers, Kirby expressed confidence that United is positioned for a dominant decade ahead.
 """,
             aiSummary: "United Airlines CEO Scott Kirby shares his ambitious vision for the airline's next decade, focusing on potential megadeals, leveraging artificial intelligence, and strategic expansions like returning to JFK airport.",
-            thumbnailURLString: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2000&auto=format&fit=crop"
+            thumbnailURLString: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=1200&auto=format&fit=crop"
         ),
         Article(
             publication: "CNBC",
@@ -134,7 +134,7 @@ Industry insiders point to several regional banks that perfectly align with the 
 As the major players weigh their options, investors are closely watching these regional stocks, anticipating a flurry of M&A activity in the coming quarters.
 """,
             aiSummary: "As regulatory hurdles ease for banking megadeals, financial giants Citigroup and Wells Fargo are positioned to acquire large regional banks, with five specific regional institutions identified as prime acquisition targets.",
-            thumbnailURLString: "https://images.unsplash.com/photo-1601597111158-2fceff292cdc?q=80&w=2000&auto=format&fit=crop"
+            thumbnailURLString: "https://images.unsplash.com/photo-1601597111158-2fceff292cdc?q=80&w=1200&auto=format&fit=crop"
         ),
         Article(
             publication: "CNBC",
@@ -159,7 +159,7 @@ Conversely, the portfolio saw significant acquisitions in legacy companies and d
 The disclosures offer a rare glimpse into the financial maneuvers of the former president, sparking widespread speculation about his economic outlook for the coming year.
 """,
             aiSummary: "Financial disclosures reveal that Donald Trump significantly restructured his investment portfolio in June, executing over a thousand transactions which included liquidating positions in tech giants like Meta while acquiring shares in Berkshire Hathaway.",
-            thumbnailURLString: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=2000&auto=format&fit=crop"
+            thumbnailURLString: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=1200&auto=format&fit=crop"
         ),
         Article(
             publication: "Wall Street Journal",
@@ -184,7 +184,7 @@ The agreement to allow civilians back north involved extensive negotiations medi
 While the return offers a glimmer of hope, officials warn that northern Gaza lacks basic infrastructure, with water and electricity still largely unavailable.
 """,
             aiSummary: "Following a breakthrough in hostage release negotiations, displaced Palestinians have begun returning to northern Gaza on foot as Israeli forces permit civilian movement across a previously restricted military zone.",
-            thumbnailURLString: "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2000&auto=format&fit=crop"
+            thumbnailURLString: "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=1200&auto=format&fit=crop"
         ),
         Article(
             publication: "Wall Street Journal",
@@ -205,7 +205,7 @@ The overarching question now is how the central government will respond. Thus fa
 However, with the contagion now reaching top-tier developers, pressure is mounting for a more comprehensive intervention to stabilize the housing market, which accounts for a significant portion of China's GDP. Global investors are watching closely, as the fallout could have profound implications for international commodities and financial markets.
 """,
             aiSummary: "Vanke, a major Chinese property developer, has reported massive financial losses, intensifying concerns over China's deepening real-estate crisis and sparking debate on whether Beijing will intervene to stabilize the market.",
-            thumbnailURLString: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=2000&auto=format&fit=crop"
+            thumbnailURLString: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=1200&auto=format&fit=crop"
         ),
         Article(
             publication: "The Washington Post",
@@ -229,7 +229,7 @@ The personal estrangement has increasingly played out in the public eye. Preston
 The Harp siblings' very public feud highlights the deeply personal cost of the current political climate, where ideological loyalty often supersedes familial bonds.
 """,
             aiSummary: "A deep political and personal divide has estranged Trump aide Natalie Harp from her brother Preston, who embraces radical left-wing politics and actively uses his public platform to criticize his sister's conservative alignment.",
-            thumbnailURLString: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?q=80&w=2000&auto=format&fit=crop"
+            thumbnailURLString: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?q=80&w=1200&auto=format&fit=crop"
         ),
         Article(
             publication: "The Washington Post",
@@ -246,7 +246,6 @@ The tragic story of the young girl who made desperate phone calls for help while
 
 ## The Military Justice System
 The broader context of the investigations highlights ongoing debates about the efficacy and impartiality of internal military probes. 
-
 1. **Selective Prosecution:** Critics point to the dropping of the World Central Kitchen case as evidence of a flawed accountability process.
 2. **International Pressure:** The Rajab case remains active largely due to relentless pressure from international allies and media organizations.
 3. **Operational Guidelines:** The military maintains that its soldiers operate under complex and dangerous conditions, complicating post-incident investigations.
@@ -254,7 +253,7 @@ The broader context of the investigations highlights ongoing debates about the e
 As the probe continues, it serves as a critical test case for the military justice system's willingness to hold its own personnel accountable in high-profile civilian deaths.
 """,
             aiSummary: "Israeli authorities are investigating the tragic death of Hind Rajab, a child in Gaza whose desperate calls for help gained global attention, even as other controversial incidents involving civilian and aid worker casualties bypass military prosecution.",
-            thumbnailURLString: "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?q=80&w=2000&auto=format&fit=crop"
+            thumbnailURLString: "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?q=80&w=1200&auto=format&fit=crop"
         )
     ]
 }

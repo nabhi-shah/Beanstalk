@@ -93,6 +93,7 @@ struct FeedContentView: View {
     var heroAnimation: Namespace.ID
     
     @State private var lastOffset: CGFloat = 0
+    @State private var isScrollLocked: Bool = false
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -111,13 +112,21 @@ struct FeedContentView: View {
                                 article: article,
                                 isExpanded: selectedArticle?.id == article.id,
                                 onToggle: {
-                                    withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
-                                        if selectedArticle?.id == article.id {
+                                    if selectedArticle?.id == article.id {
+                                        isScrollLocked = false
+                                        withAnimation(.spring(response: 0.45, dampingFraction: 0.75)) {
                                             selectedArticle = nil
-                                        } else {
+                                        }
+                                    } else {
+                                        isScrollLocked = false
+                                        withAnimation(.spring(response: 0.45, dampingFraction: 0.75)) {
                                             selectedArticle = article
-                                            // Scroll to top of the screen when expanded
                                             scrollProxy.scrollTo(article.id, anchor: .top)
+                                        }
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                            if selectedArticle != nil {
+                                                isScrollLocked = true
+                                            }
                                         }
                                     }
                                 }
@@ -126,12 +135,16 @@ struct FeedContentView: View {
                             .opacity(selectedArticle != nil && selectedArticle?.id != article.id ? 0 : 1)
                             .animation(.easeInOut(duration: 0.3), value: selectedArticle?.id)
                         }
+                        
+                        // Bottom spacer inside LazyVStack guaranteeing scroll travel to anchor: .top for last card
+                        Color.clear
+                            .frame(height: selectedArticle != nil ? UIScreen.main.bounds.height : max(UIScreen.main.bounds.height * 0.55, 450))
+                            .id("bottomFeedSpacer")
                     }
                     .padding(.horizontal, selectedArticle != nil ? 20 : 12)
                     .padding(.top, 48)
-                    .padding(.bottom, 120) // Space for TabBar
                 }
-                .scrollDisabled(selectedArticle != nil)
+                .scrollDisabled(isScrollLocked)
                 .coordinateSpace(name: "scroll")
                 .onPreferenceChange(ScrollOffsetKey.self) { offset in
                     let delta = lastOffset - offset
@@ -161,8 +174,6 @@ struct FeedContentView: View {
             ProgressiveBlurView(height: 120, edge: .top)
                 .opacity(selectedArticle != nil ? 0 : 1)
                 .animation(.easeInOut(duration: 0.3), value: selectedArticle?.id)
-
-
         }
     }
 }
@@ -179,9 +190,26 @@ struct ArticleRowView: View {
     @State private var frontCardIndex: Int = 0
     @State private var dragOffset: CGFloat = 0
     @State private var isLongPressing: Bool = false
-    @State private var showChevrons: Bool = false
     @State private var chatInputText: String = ""
     @State private var isAnnotationModeActive: Bool = false
+    @State private var highlightSweepProgress: Double = 0.0
+    @State private var highlightFadeOpacity: Double = 1.0
+    @State private var highlightSpans: [HighlightSpan] = []
+    @State private var highlightAnimationTask: Task<Void, Never>? = nil
+    @State private var isTextSelectable: Bool = false
+        @State private var isHighlightAnimating: Bool = false
+    @State private var contentHighlights: [HighlightRange] = []
+    @State private var summaryHighlights: [HighlightRange] = []
+    @State private var isCard1Loaded: Bool = false
+    @State private var isCard2Loaded: Bool = false
+    @State private var loadedImage: UIImage? = nil
+    
+    private var currentImage: Image? {
+        if let loadedImage = loadedImage {
+            return Image(uiImage: loadedImage)
+        }
+        return nil
+    }
     
     private func cardMetrics(for index: Int) -> (zIndex: Double, scaleX: CGFloat, scaleY: CGFloat, xOffset: CGFloat, opacity: Double) {
         if !isExpanded {
@@ -247,31 +275,18 @@ struct ArticleRowView: View {
                 // Card 2
                 let c2 = cardMetrics(for: 2)
                 Group {
-                    if let url = article.thumbnailURL {
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .success(let image): chatCard(image: image)
-                            case .empty, .failure: chatCard(image: nil)
-                            @unknown default: chatCard(image: nil)
-                            }
-                        }
+                    if isCard2Loaded || frontCardIndex == 2 {
+                        chatCard(image: currentImage)
                     } else {
-                        chatCard(image: nil)
+                        cardPlaceholder(color: Color(red: 236/255, green: 236/255, blue: 236/255))
                     }
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
                 .overlay(
                     Color.white.opacity(0.01)
-                        .modifier(RippleModifier(rippleColor: Color.black.opacity(0.35), touchLocation: touchLocation, isPressed: isPressed && frontCardIndex == 2))
+                        .modifier(RippleModifier(rippleColor: Color.black.opacity(0.35), touchLocation: touchLocation, isPressed: isLongPressing && frontCardIndex == 2))
                         .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
                         .allowsHitTesting(false)
-                )
-                .background(
-                    TouchLocatingView { location in
-                        if !isPressed && frontCardIndex == 2 {
-                            touchLocation = location
-                        }
-                    }
                 )
                 .overlay(RoundedRectangle(cornerRadius: 42, style: .continuous).stroke(Color(red: 223/255, green: 223/255, blue: 223/255), lineWidth: 0.5))
                 .scaleEffect(x: c2.scaleX, y: c2.scaleY)
@@ -283,31 +298,18 @@ struct ArticleRowView: View {
                 // Card 1
                 let c1 = cardMetrics(for: 1)
                 Group {
-                    if let url = article.thumbnailURL {
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .success(let image): articleDetailCard(image: image)
-                            case .empty, .failure: articleDetailCard(image: nil)
-                            @unknown default: articleDetailCard(image: nil)
-                            }
-                        }
+                    if isCard1Loaded || frontCardIndex == 1 {
+                        articleDetailCard(image: currentImage)
                     } else {
-                        articleDetailCard(image: nil)
+                        cardPlaceholder(color: Color(red: 242/255, green: 242/255, blue: 242/255))
                     }
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
                 .overlay(
                     Color.white.opacity(0.01)
-                        .modifier(RippleModifier(rippleColor: Color.black.opacity(0.35), touchLocation: touchLocation, isPressed: isPressed && frontCardIndex == 1))
+                        .modifier(RippleModifier(rippleColor: Color.black.opacity(0.35), touchLocation: touchLocation, isPressed: isLongPressing && frontCardIndex == 2))
                         .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
                         .allowsHitTesting(false)
-                )
-                .background(
-                    TouchLocatingView { location in
-                        if !isPressed && frontCardIndex == 1 {
-                            touchLocation = location
-                        }
-                    }
                 )
                 .overlay(RoundedRectangle(cornerRadius: 42, style: .continuous).stroke(Color(red: 223/255, green: 223/255, blue: 223/255), lineWidth: 0.5))
                 .scaleEffect(x: c1.scaleX, y: c1.scaleY)
@@ -318,32 +320,13 @@ struct ArticleRowView: View {
                 
                 // Card 0 (Main Card)
                 let c0 = cardMetrics(for: 0)
-                Group {
-                    if let url = article.thumbnailURL {
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .success(let image): cardContent(image: image)
-                            case .empty, .failure: cardContent(image: nil)
-                            @unknown default: cardContent(image: nil)
-                            }
-                        }
-                    } else {
-                        cardContent(image: nil)
-                    }
-                }
+                cardContent(image: currentImage)
                 .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
                 .overlay(
                     Color.white.opacity(0.01)
-                        .modifier(RippleModifier(rippleColor: Color.black.opacity(0.35), touchLocation: touchLocation, isPressed: isPressed && frontCardIndex == 0))
+                        .modifier(RippleModifier(rippleColor: Color.black.opacity(0.35), touchLocation: touchLocation, isPressed: isLongPressing && frontCardIndex == 0))
                         .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
                         .allowsHitTesting(false)
-                )
-                .background(
-                    TouchLocatingView { location in
-                        if !isPressed && frontCardIndex == 0 {
-                            touchLocation = location
-                        }
-                    }
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 42, style: .continuous)
@@ -378,29 +361,23 @@ struct ArticleRowView: View {
                 .animation(.easeInOut(duration: 0.2), value: frontCardIndex)
             }
         }
-        .onChange(of: isLongPressing) { oldValue, newValue in
-            if newValue {
-                withAnimation(.easeIn(duration: 0.2)) {
-                    showChevrons = true
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
-                    if isLongPressing {
-                        withAnimation(.easeOut(duration: 0.4)) {
-                            showChevrons = false
-                        }
-                    }
-                }
-            } else {
-                withAnimation(.easeOut(duration: 0.2)) {
-                    showChevrons = false
-                }
-            }
-        }
         .onChange(of: isExpanded) { oldValue, newValue in
             if newValue {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     withAnimation(.easeIn(duration: 0.2)) {
                         showActions = true
+                    }
+                }
+                // Lazy load Card 1 shortly after the opening transition has completed
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        isCard1Loaded = true
+                    }
+                }
+                // Lazy load Card 2 progressively after Card 1
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        isCard2Loaded = true
                     }
                 }
             } else {
@@ -410,21 +387,96 @@ struct ArticleRowView: View {
                     // Delay reset so the card can slide out right during collapse
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                         frontCardIndex = 0
+                        isCard1Loaded = false
+                        isCard2Loaded = false
                     }
                 } else {
                     frontCardIndex = 0
+                    isCard1Loaded = false
+                    isCard2Loaded = false
                 }
             }
         }
+        .onAppear {
+            if loadedImage == nil, let url = article.thumbnailURL {
+                if let cached = RemoteImageManager.shared.image(for: url) {
+                    loadedImage = cached
+                }
+            }
+        }
+        .task(id: article.thumbnailURL) {
+            guard let url = article.thumbnailURL else { return }
+            if let cached = RemoteImageManager.shared.image(for: url) {
+                loadedImage = cached
+            } else {
+                let img = await RemoteImageManager.shared.load(url: url)
+                if !Task.isCancelled {
+                    withAnimation(.easeIn(duration: 0.2)) {
+                        loadedImage = img
+                    }
+                }
+            }
+        }
+        .onChange(of: isAnnotationModeActive) { oldValue, newValue in
+            if newValue {
+                triggerHighlightAnimation()
+            } else {
+                cancelHighlightAnimation()
+            }
+        }
+        .onDisappear {
+            cancelHighlightAnimation()
+        }
+    }
+    
+    private func triggerHighlightAnimation() {
+        isTextSelectable = true
+    }
+    
+    private func cancelHighlightAnimation() {
+        isTextSelectable = false
+    }
+    
+    private func generateHighlightSpans() -> [HighlightSpan] {
+        let yellowColor = Color(red: 1.0, green: 0.84, blue: 0.20)
+        
+        return [
+            HighlightSpan(
+                startFraction: CGFloat.random(in: 0.05...0.25),
+                endFraction: CGFloat.random(in: 0.75...0.95),
+                color: yellowColor
+            ),
+            HighlightSpan(
+                startFraction: CGFloat.random(in: 0.0...0.2),
+                endFraction: CGFloat.random(in: 0.7...0.9),
+                color: yellowColor
+            ),
+            HighlightSpan(
+                startFraction: CGFloat.random(in: 0.15...0.35),
+                endFraction: CGFloat.random(in: 0.8...1.0),
+                color: yellowColor
+            )
+        ]
+    }
+    
+    // Placeholder view for lazy loading cards in stack
+    @ViewBuilder
+    private func cardPlaceholder(color: Color) -> some View {
+        color
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     // Computed height for expanded state to fill the screen minus safe areas, dots, and padding
     private var expandedCardHeight: CGFloat {
-        let windowInsets = UIApplication.shared.connectedScenes
+        let window = UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
-            .first?.windows.first?.safeAreaInsets
-        let safeTop = max(windowInsets?.top ?? 47, 47)
-        let safeBottom = max(windowInsets?.bottom ?? 34, 34)
+            .flatMap { $0.windows }
+            .first(where: { $0.isKeyWindow })
+            ?? UIApplication.shared.connectedScenes
+                .compactMap { $0 as? UIWindowScene }
+                .first?.windows.first
+        let safeTop = max(window?.safeAreaInsets.top ?? 59, 47)
+        let safeBottom = max(window?.safeAreaInsets.bottom ?? 34, 34)
         // Screen height - safeTop - safeBottom - 20 (dots) - 12 (spacing)
         let calculated = UIScreen.main.bounds.height - safeTop - safeBottom - 32
         return max(calculated, 600) // Ensure it doesn't get ridiculously small on tiny screens
@@ -433,12 +485,8 @@ struct ArticleRowView: View {
     @ViewBuilder
     private func annotationModeButton() -> some View {
         Button(action: {
-            withAnimation(.bouncy(duration: 0.48, extraBounce: 0.18)) {
-                if isAnnotationModeActive {
-                    isAnnotationModeActive = false
-                } else {
-                    isAnnotationModeActive = true
-                }
+            withAnimation(.spring(response: 0.38, dampingFraction: 0.82)) {
+                isAnnotationModeActive.toggle()
             }
         }) {
             HStack(spacing: 12) {
@@ -469,39 +517,24 @@ struct ArticleRowView: View {
             .frame(height: 56)
             .frame(minWidth: 56)
             .background(
-                ZStack {
-                    // Visible base fill ensuring contrast and full alpha for ripple
-                    Capsule(style: .continuous)
-                        .fill(isAnnotationModeActive ? Color(red: 24/255, green: 24/255, blue: 24/255) : Color.white)
-                    
-                    // Liquid glass sheen overlay
-                    Color.clear
-                        .glassEffect(
-                            .regular.tint(
-                                isAnnotationModeActive
-                                    ? Color.black.opacity(0.3)
-                                    : Color.white.opacity(0.2)
-                            ),
-                            in: .capsule
-                        )
-                    
-                    // Subtle perimeter stroke
-                    Capsule(style: .continuous)
-                        .stroke(
-                            isAnnotationModeActive ? Color.white.opacity(0.14) : Color.black.opacity(0.06),
-                            lineWidth: 0.5
-                        )
-                }
+                Capsule(style: .continuous)
+                    .fill(isAnnotationModeActive ? Color.black.opacity(0.18) : Color.white.opacity(0.001))
             )
             .clipShape(Capsule(style: .continuous))
             .contentShape(Capsule(style: .continuous))
         }
-        .buttonStyle(RippleButtonStyle(rippleColor: isAnnotationModeActive ? Color.white.opacity(0.4) : Color.black.opacity(0.3)))
+        .buttonStyle(RippleButtonStyle(rippleColor: isAnnotationModeActive ? Color.white.opacity(0.3) : Color.black.opacity(0.2)))
+        .glassEffect(
+            isAnnotationModeActive
+                ? .regular.tint(Color.gray.opacity(0.55))
+                : .regular,
+            in: .capsule
+        )
         .shadow(
-            color: Color.black.opacity(isAnnotationModeActive ? 0.22 : 0.10),
-            radius: isAnnotationModeActive ? 10 : 6,
+            color: Color.black.opacity(isAnnotationModeActive ? 0.16 : 0.08),
+            radius: isAnnotationModeActive ? 8 : 6,
             x: 0,
-            y: isAnnotationModeActive ? 5 : 3
+            y: isAnnotationModeActive ? 4 : 2
         )
     }
     
@@ -516,40 +549,18 @@ struct ArticleRowView: View {
                         .frame(height: 190)
                     
                     // Article Content
-                    if let parsedStr = try? AttributedString(markdown: article.content) {
-                        let attrStr: AttributedString = {
-                            var str = parsedStr
-                            var breakIndices = [AttributedString.Index]()
-                            for (intent, range) in str.runs[\.presentationIntent] {
-                                if let intent = intent {
-                                    if range.upperBound < str.endIndex {
-                                        breakIndices.append(range.upperBound)
-                                    }
-                                    for component in intent.components {
-                                        if case .header(let level) = component.kind {
-                                            let size: CGFloat = level == 1 ? 24 : (level == 2 ? 22 : 20)
-                                            str[range].font = .system(size: size, weight: .bold)
-                                        }
-                                    }
-                                }
-                            }
-                            for index in breakIndices.sorted(by: >) {
-                                str.insert(AttributedString("\n\n"), at: index)
-                            }
-                            return str
-                        }()
-                        Text(attrStr)
-                            .foregroundColor(Color(white: 0.35))
-                            .lineSpacing(6)
-                            .padding(.horizontal, 24)
-                            .padding(.bottom, 120) // Space for FAB and dots
-                    } else {
-                        Text(article.content)
-                            .foregroundColor(Color(white: 0.35))
-                            .lineSpacing(6)
-                            .padding(.horizontal, 24)
-                            .padding(.bottom, 120) // Space for FAB and dots
-                    }
+                    SelectableTextView(
+                        attributedText: article.attributedContent,
+                        font: .preferredFont(forTextStyle: .body),
+                        textColor: UIColor(white: 0.35, alpha: 1.0),
+                        lineSpacing: 6,
+                        tintColor: UIColor(Color.brandGreen),
+                        highlightedRanges: $contentHighlights
+                    )
+                    .allowsHitTesting(isTextSelectable)
+                    .tint(.brandGreen)
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 120) // Space for FAB and dots
                 }
                 .padding(.top, 16)
             }
@@ -560,7 +571,7 @@ struct ArticleRowView: View {
             // Bottom Grab Handle for Swiping Cards (only when expanded)
             // Rendered before the FAB so it doesn't blur the button
             if isExpanded && !isAnnotationModeActive {
-                grabHandle()
+                grabHandle(isFront: frontCardIndex == 1)
                     .transition(.opacity)
             }
             
@@ -593,6 +604,27 @@ struct ArticleRowView: View {
     }
     
     @ViewBuilder
+    private func glassOverlayButtons() -> some View {
+        HStack {
+            AdaptiveGlassIconButton(
+                iconName: "CaretLeft",
+                overrideIsDark: article.isLeadingDark,
+                action: onToggle
+            )
+            
+            Spacer()
+            
+            AdaptiveGlassIconButton(
+                iconName: "bookmark-simple",
+                overrideIsDark: article.isTrailingDark,
+                action: { }
+            )
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 24)
+    }
+    
+    @ViewBuilder
     private func articleHeaderView(image: Image?) -> some View {
         ZStack(alignment: .top) {
             // Progressive blur behind the header to fade the scrolling text
@@ -611,45 +643,7 @@ struct ArticleRowView: View {
                     }
                     
                     // Action Buttons Overlay
-                    HStack {
-                        Button(action: onToggle) {
-                            Image("CaretLeft")
-                                .renderingMode(.template)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 20, height: 20)
-                                .foregroundColor(.textDark)
-                                .frame(width: 44, height: 44)
-                                .background(Circle().fill(Color.white.opacity(0.01)))
-                                .contentShape(Circle())
-                        }
-                        .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.3)))
-                        .background(
-                            Color.clear
-                                .glassEffect(.regular.tint(Color.white.opacity(0.4)), in: .circle)
-                        )
-                        
-                        Spacer()
-                        
-                        Button(action: { }) {
-                            Image("bookmark-simple")
-                                .renderingMode(.template)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 20, height: 20)
-                                .foregroundColor(.textDark)
-                                .frame(width: 44, height: 44)
-                                .background(Circle().fill(Color.white.opacity(0.01)))
-                                .contentShape(Circle())
-                        }
-                        .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.3)))
-                        .background(
-                            Color.clear
-                                .glassEffect(.regular.tint(Color.white.opacity(0.4)), in: .circle)
-                        )
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.top, 24)
+                    glassOverlayButtons()
                 }
                 
                 VStack(alignment: .leading, spacing: 12) {
@@ -695,7 +689,7 @@ struct ArticleRowView: View {
                 if !isAnnotationModeActive {
                     // Bottom Grab Handle for Swiping Cards
                     // Rendered before the content so it doesn't blur the chat input
-                    grabHandle()
+                    grabHandle(isFront: frontCardIndex == 2)
                         .transition(.opacity)
                 }
                 
@@ -767,11 +761,18 @@ struct ArticleRowView: View {
                         .multilineTextAlignment(.leading)
                     
                     if isExpanded {
-                        Text(article.aiSummary)
-                            .foregroundColor(Color(white: 0.35))
-                            .lineSpacing(4)
-                            .padding(.top, 8)
-                            .transition(.opacity.combined(with: .move(edge: .bottom)))
+                        SelectableTextView(
+                            attributedText: AttributedString(article.aiSummary),
+                            font: .preferredFont(forTextStyle: .body),
+                            textColor: UIColor(white: 0.35, alpha: 1.0),
+                            lineSpacing: 4,
+                            tintColor: UIColor(Color.brandGreen),
+                            highlightedRanges: $summaryHighlights
+                        )
+                        .allowsHitTesting(isTextSelectable)
+                        .tint(.brandGreen)
+                        .padding(.top, 8)
+                        .transition(.opacity.combined(with: .move(edge: .bottom)))
                     }
                 }
                 .padding(.horizontal, 24)
@@ -783,52 +784,14 @@ struct ArticleRowView: View {
             
             // Bottom Grab Handle for Swiping Cards (below buttons in Z-index)
             if isExpanded && !isAnnotationModeActive {
-                grabHandle()
+                grabHandle(isFront: frontCardIndex == 0)
                     .transition(.opacity)
             }
             
             // 3. Action Buttons Overlay
             if isExpanded {
                 VStack {
-                    HStack {
-                        Button(action: onToggle) {
-                            Image("CaretLeft")
-                                .renderingMode(.template)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 20, height: 20)
-                                .foregroundColor(.textDark)
-                                .frame(width: 44, height: 44)
-                                .background(Circle().fill(Color.white.opacity(0.01)))
-                                .contentShape(Circle())
-                        }
-                        .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.3)))
-                        .background(
-                            Color.clear
-                                .glassEffect(.regular.tint(Color.white.opacity(0.4)), in: .circle)
-                        )
-                        
-                        Spacer()
-                        
-                        Button(action: { }) {
-                            Image("bookmark-simple")
-                                .renderingMode(.template)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 20, height: 20)
-                                .foregroundColor(.textDark)
-                                .frame(width: 44, height: 44)
-                                .background(Circle().fill(Color.white.opacity(0.01)))
-                                .contentShape(Circle())
-                        }
-                        .buttonStyle(RippleButtonStyle(rippleColor: Color.black.opacity(0.3)))
-                        .background(
-                            Color.clear
-                                .glassEffect(.regular.tint(Color.white.opacity(0.4)), in: .circle)
-                        )
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.top, 24)
+                    glassOverlayButtons()
                     
                     Spacer()
                     
@@ -870,22 +833,18 @@ struct ArticleRowView: View {
                 }
             }
         }
-        .onTapGesture(coordinateSpace: .local) { location in
-            if !isExpanded {
-                touchLocation = location
-                isPressed = true
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    isPressed = false
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                    onToggle()
-                }
+
+        .conditionalGesture(!isExpanded, TapGesture().onEnded {
+            isPressed = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                isPressed = false
             }
-        }
+            onToggle()
+        })
     }
     
     @ViewBuilder
-    private func grabHandle() -> some View {
+    private func grabHandle(isFront: Bool = true) -> some View {
         VStack(spacing: 0) {
             Spacer()
             
@@ -894,41 +853,13 @@ struct ArticleRowView: View {
                 ProgressiveBlurView(height: 52, edge: .bottom)
                     .allowsHitTesting(false)
                 
-                HStack(spacing: 40) {
-                    if showChevrons {
-                        ShimmerChevron(isLeft: true, isAnimating: $showChevrons)
-                            .transition(.opacity)
-                    }
-                    
-                    VStack(spacing: 8) {
-                        VStack(spacing: 3) {
-                            HStack(spacing: 3) {
-                                Circle().frame(width: 3, height: 3)
-                                Circle().frame(width: 3, height: 3)
-                                Circle().frame(width: 3, height: 3)
-                            }
-                            HStack(spacing: 3) {
-                                Circle().frame(width: 3, height: 3)
-                                Circle().frame(width: 3, height: 3)
-                                Circle().frame(width: 3, height: 3)
-                            }
-                        }
-                        .foregroundColor(Color.textSecondary.opacity(0.4))
-                    }
-                    .frame(height: 24)
-                    
-                    if showChevrons {
-                        ShimmerChevron(isLeft: false, isAnimating: $showChevrons)
-                            .transition(.opacity)
-                    }
-                }
-                .frame(height: 24)
-                .padding(.bottom, 10)
-                .frame(maxWidth: .infinity)
-                .frame(height: 52, alignment: .bottom)
-                .background(Color.white.opacity(0.001))
-                .contentShape(Rectangle())
-                .overlay(carouselGestureLayer()) // Gesture is now ONLY at the bottom
+                GrabChevronIndicator(isGrabbed: isLongPressing && isFront)
+                    .padding(.bottom, 10)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52, alignment: .bottom)
+                    .background(Color.white.opacity(0.001))
+                    .contentShape(Rectangle())
+                    .overlay(carouselGestureLayer()) // Gesture is now ONLY at the bottom
             }
         }
     }
@@ -1008,6 +939,84 @@ struct ArticleRowView: View {
     }
 }
 
+// MARK: - Annotation Highlight Animation Models & Renderer
+
+struct HighlightSpan: Sendable {
+    var startFraction: CGFloat
+    var endFraction: CGFloat
+    var color: Color
+}
+
+struct HighlightRenderer: TextRenderer, Animatable {
+    var sweepProgress: Double
+    var fadeOpacity: Double
+    var spans: [HighlightSpan]
+    
+    var animatableData: AnimatablePair<Double, Double> {
+        get { AnimatablePair(sweepProgress, fadeOpacity) }
+        set {
+            sweepProgress = newValue.first
+            fadeOpacity = newValue.second
+        }
+    }
+    
+    func draw(layout: Text.Layout, in context: inout GraphicsContext) {
+        let lineArray = Array(layout)
+        
+        // Draw highlight ink backgrounds behind the text
+        if sweepProgress > 0 && fadeOpacity > 0 && !spans.isEmpty {
+            let validLineIndices = (0..<lineArray.count).filter { lineArray[$0].typographicBounds.rect.width > 20 }
+            
+            for (index, span) in spans.enumerated() {
+                guard index < validLineIndices.count else { continue }
+                
+                let targetIdx: Int
+                if spans.count <= validLineIndices.count {
+                    let chunkStart = (validLineIndices.count * index) / spans.count
+                    let chunkSize = validLineIndices.count / spans.count
+                    targetIdx = chunkStart + (chunkSize / 2)
+                } else {
+                    targetIdx = index
+                }
+                
+                let targetLine = lineArray[validLineIndices[targetIdx]]
+                let lineRect = targetLine.typographicBounds.rect
+                
+                let fullStartX = lineRect.minX + lineRect.width * span.startFraction
+                let fullEndX = lineRect.minX + lineRect.width * span.endFraction
+                let fullSpanWidth = max(fullEndX - fullStartX, 10)
+                
+                let currentWidth = fullSpanWidth * sweepProgress
+                guard currentWidth > 0 else { continue }
+                
+                let highlightRect = CGRect(
+                    x: fullStartX - 3,
+                    y: lineRect.minY - 1,
+                    width: currentWidth + 6,
+                    height: lineRect.height + 2
+                )
+                let path = Path(roundedRect: highlightRect, cornerRadius: 4)
+                context.fill(path, with: .color(span.color.opacity(0.38 * fadeOpacity)))
+            }
+        }
+        
+        // Draw the text lines on top
+        for line in layout {
+            context.draw(line)
+        }
+    }
+}
+
+extension View {
+    @ViewBuilder
+    func textSelectable(_ isSelectable: Bool) -> some View {
+        if isSelectable {
+            self.textSelection(.enabled)
+        } else {
+            self.textSelection(.disabled)
+        }
+    }
+}
 
 // Custom modifier to simulate Figma's un-clamped layer blur
 struct FigmaLayerBlur: ViewModifier {
@@ -1036,63 +1045,175 @@ extension View {
     }
 }
 
-struct ShimmerChevron: View {
-    var isLeft: Bool
-    @Binding var isAnimating: Bool
+// MARK: - Isolated High-Performance Grab Chevron Indicator
+struct GrabChevronIndicator: View {
+    let isGrabbed: Bool
     
-    @State private var shimmerPhase: CGFloat = 0
+    @State private var visibleCount: Int = 0
+    @State private var animationTask: Task<Void, Never>? = nil
     
-    private var baseChevron: some View {
-        HStack(spacing: -5) {
-            ForEach(0..<4, id: \.self) { _ in
-                Image(systemName: isLeft ? "chevron.compact.left" : "chevron.compact.right")
-                    .font(.system(size: 18, weight: .heavy))
+    var body: some View {
+        HStack(spacing: 20) {
+            chevronGroup(isLeft: true)
+            grabDots
+            chevronGroup(isLeft: false)
+        }
+        .frame(height: 24)
+        .onChange(of: isGrabbed) { _, grabbed in
+            animationTask?.cancel()
+            if grabbed {
+                animationTask = Task { @MainActor in
+                    await runSequence()
+                }
+            } else {
+                withAnimation(.easeOut(duration: 0.12)) {
+                    visibleCount = 0
+                }
             }
         }
+        .onDisappear {
+            animationTask?.cancel()
+            visibleCount = 0
+        }
+    }
+    
+    @ViewBuilder
+    private func chevronGroup(isLeft: Bool) -> some View {
+        HStack(spacing: -5) {
+            if isLeft {
+                chevronIcon(isLeft: true, index: 4)
+                chevronIcon(isLeft: true, index: 3)
+                chevronIcon(isLeft: true, index: 2)
+                chevronIcon(isLeft: true, index: 1)
+            } else {
+                chevronIcon(isLeft: false, index: 1)
+                chevronIcon(isLeft: false, index: 2)
+                chevronIcon(isLeft: false, index: 3)
+                chevronIcon(isLeft: false, index: 4)
+            }
+        }
+        .offset(y: -2)
+    }
+    
+    @ViewBuilder
+    private func chevronIcon(isLeft: Bool, index: Int) -> some View {
+        Image(systemName: isLeft ? "chevron.compact.left" : "chevron.compact.right")
+            .font(.system(size: 18, weight: .heavy))
+            .foregroundColor(Color.textSecondary.opacity(0.55))
+            .opacity(visibleCount >= index ? 1 : 0)
+    }
+    
+    private var grabDots: some View {
+        VStack(spacing: 3) {
+            HStack(spacing: 3) {
+                Circle().frame(width: 3, height: 3)
+                Circle().frame(width: 3, height: 3)
+                Circle().frame(width: 3, height: 3)
+            }
+            HStack(spacing: 3) {
+                Circle().frame(width: 3, height: 3)
+                Circle().frame(width: 3, height: 3)
+                Circle().frame(width: 3, height: 3)
+            }
+        }
+        .foregroundColor(Color.textSecondary.opacity(0.4))
+        .frame(height: 24)
+    }
+    
+    @MainActor
+    private func runSequence() async {
+        let stepDuration: UInt64 = 85_000_000 // 85ms
+        let holdDuration: UInt64 = 180_000_000 // 180ms
+        let pauseDuration: UInt64 = 120_000_000 // 120ms
+        
+        for _ in 0..<2 {
+            for count in 1...4 {
+                guard !Task.isCancelled else { return }
+                withAnimation(.easeInOut(duration: 0.08)) {
+                    visibleCount = count
+                }
+                try? await Task.sleep(nanoseconds: stepDuration)
+            }
+            
+            guard !Task.isCancelled else { return }
+            try? await Task.sleep(nanoseconds: holdDuration)
+            
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeOut(duration: 0.12)) {
+                visibleCount = 0
+            }
+            try? await Task.sleep(nanoseconds: pauseDuration)
+        }
+    }
+}
+
+// MARK: - Dynamic Adaptive Glass Button
+struct AdaptiveGlassIconButton: View {
+    let iconName: String
+    var overrideIsDark: Bool? = nil
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            AdaptiveGlassIconContent(iconName: iconName, overrideIsDark: overrideIsDark)
+        }
+        .buttonStyle(AdaptiveGlassRippleButtonStyle(overrideIsDark: overrideIsDark))
+        .glassEffect(.regular, in: .circle)
+        .shadow(color: Color.black.opacity(0.06), radius: 6, x: 0, y: 2)
+    }
+}
+
+// 💡 Isolated subview to extract the adapted @Environment(\.colorScheme) resolved by .glassEffect()
+struct AdaptiveGlassIconContent: View {
+    let iconName: String
+    var overrideIsDark: Bool? = nil
+    
+    // Automatically receives the glass's resolved state (.light or .dark)
+    @Environment(\.colorScheme) private var resolvedGlassState
+    
+    private var isDark: Bool {
+        if let override = overrideIsDark {
+            return override
+        }
+        return resolvedGlassState == .dark
     }
     
     var body: some View {
-        baseChevron
-            .foregroundColor(Color.textSecondary.opacity(0.2))
-            .overlay(
-                LinearGradient(
-                    gradient: Gradient(stops: [
-                        .init(color: .clear, location: 0.0),
-                        .init(color: Color.textSecondary, location: 0.4),
-                        .init(color: .white, location: 0.5),
-                        .init(color: Color.textSecondary, location: 0.6),
-                        .init(color: .clear, location: 1.0)
-                    ]),
-                    startPoint: UnitPoint(x: shimmerPhase, y: 0),
-                    endPoint: UnitPoint(x: shimmerPhase + 0.5, y: 0)
-                )
-                .mask(baseChevron)
-            )
-            .offset(y: -2)
-            .onChange(of: isAnimating) { oldValue, newValue in
-                if newValue {
-                    runShimmer()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                        if isAnimating { runShimmer() }
-                    }
-                } else {
-                    shimmerPhase = isLeft ? 1.5 : -0.5
-                }
-            }
-            .onAppear {
-                shimmerPhase = isLeft ? 1.5 : -0.5
-            }
+        Image(iconName)
+            .renderingMode(.template)
+            .resizable()
+            .scaledToFit()
+            .frame(width: 20, height: 20)
+            .foregroundColor(isDark ? Color(white: 0.88) : .textDark)
+            .frame(width: 44, height: 44)
+            .background(Circle().fill(Color.white.opacity(0.01)))
+            .contentShape(Circle())
+    }
+}
+
+struct AdaptiveGlassRippleButtonStyle: ButtonStyle {
+    var overrideIsDark: Bool? = nil
+    @Environment(\.colorScheme) private var resolvedGlassState
+    @State private var touchLocation: CGPoint?
+    
+    private var isDark: Bool {
+        if let override = overrideIsDark {
+            return override
+        }
+        return resolvedGlassState == .dark
     }
     
-    private func runShimmer() {
-        // Force reset without animation
-        withAnimation(.none) {
-            shimmerPhase = isLeft ? 1.5 : -0.5
-        }
-        
-        withAnimation(.linear(duration: 1.0)) {
-            shimmerPhase = isLeft ? -0.5 : 1.5
-        }
+    func makeBody(configuration: Configuration) -> some View {
+        let rippleColor = isDark ? Color.white.opacity(0.35) : Color.black.opacity(0.3)
+        configuration.label
+            .modifier(RippleModifier(rippleColor: rippleColor, touchLocation: touchLocation, isPressed: configuration.isPressed))
+            .background(
+                TouchLocatingView { location in
+                    if !configuration.isPressed {
+                        touchLocation = location
+                    }
+                }
+            )
     }
 }
 
@@ -1100,4 +1221,3 @@ struct ShimmerChevron: View {
     @Previewable @Namespace var namespace
     FeedView(appState: .constant(.feed), animationNamespace: namespace)
 }
-import SwiftUI

@@ -51,7 +51,7 @@ struct ContentView: View {
                     }
                 }
             }
-            .background(GooeyTabBackground(isLogin: isLogin).rippleEffect(color: Color.brandGreen.opacity(0.4)))
+            .background(GooeyTabBackground(isLogin: isLogin).rippleEffect(color: Color.brandGreen.opacity(0.6)))
 
             // Form
             VStack(spacing: 16) {
@@ -127,7 +127,7 @@ struct ContentView: View {
             .buttonStyle(RippleButtonStyle(rippleColor: Color.white.opacity(0.4)))
             .background(
                 Color.clear
-                    .glassEffect(.regular.tint(Color.brandGreen.opacity(0.6)), in: .capsule)
+                    .glassEffect(.regular.tint(Color.brandGreen.opacity(0.75)), in: .capsule)
             )
             .padding(.top, 8)
 

@@ -269,6 +269,7 @@ public struct UnionTabView<Tab: Hashable, Content: View, TabItemContent: View>: 
         .padding(UnionTabBarMetrics.padding)
         .background(Color.white)
         .clipShape(Capsule())
+        .shadow(color: Color.black.opacity(0.15), radius: 14, x: 0, y: 4)
         // Scaling the assembled bar keeps the shrink centred. Resizing it
         // instead would pin the change to the bottom edge, since that is where
         // the safe area inset anchors it.
@@ -311,6 +312,9 @@ public struct UnionTabView<Tab: Hashable, Content: View, TabItemContent: View>: 
         .clipShape(Capsule())
         .allowsHitTesting(false)
         .padding(4)
+        .background(Color.white)
+        .clipShape(Capsule())
+        .shadow(color: Color.black.opacity(0.15), radius: 14, x: 0, y: 4)
         .offset(y: hideOffset)
         .blur(radius: hideOffset > 0 ? (hideOffset / 10) : 0)
         .animation(minimizeAnimation, value: hideOffset)

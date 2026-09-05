@@ -10,9 +10,13 @@ struct SavedView: View {
     @State private var searchTouchLocation: CGPoint? = nil
     @State private var isSearchPressed: Bool = false
     
+    @State private var activeDisplayTab: SavedTabType = .saved
+    @State private var articleOpacity: Double = 1.0
+    @State private var tabTransitionTask: Task<Void, Never>? = nil
+    
     // Data sources
     private var baseArticles: [SavedArticle] {
-        selectedTab == .saved ? SavedMockData.savedArticles : SavedMockData.annotatedArticles
+        activeDisplayTab == .saved ? SavedMockData.savedArticles : SavedMockData.annotatedArticles
     }
     
     // Filtered and sorted articles
@@ -50,23 +54,28 @@ struct SavedView: View {
             // Scrollable Article Feed
             ScrollView {
                 LazyVStack(spacing: 16) {
-                    // Space for the sticky top section (Tabs + Controls + Progressive Blur)
+                    // Space for the sticky top section (Tabs + Controls) leaving a small gap after filter
                     Color.clear
-                        .frame(height: 195)
+                        .frame(height: 132)
                     
-                    if displayedArticles.isEmpty {
-                        emptyStateView
-                    } else {
-                        ForEach(displayedArticles) { article in
-                            SavedArticleRowView(
-                                article: article,
-                                isAnnotationTab: selectedTab == .annotations
-                            )
+                    Group {
+                        if displayedArticles.isEmpty {
+                            emptyStateView
+                        } else {
+                            ForEach(displayedArticles) { article in
+                                SavedArticleRowView(
+                                    article: article,
+                                    isAnnotationTab: activeDisplayTab == .annotations
+                                )
+                            }
                         }
                     }
+                    .opacity(articleOpacity)
                 }
                 .padding(.bottom, 120) // Clearance for floating UnionTabView
             }
+            .id(activeDisplayTab)
+            .transition(.identity)
             .scrollDismissesKeyboard(.immediately)
             
             // Bottom Progressive Blur (matching home feed)
@@ -80,6 +89,24 @@ struct SavedView: View {
             // Sticky Top Header with Progressive Blur
             stickyHeader
         }
+        .onChange(of: selectedTab) { oldValue, newValue in
+            guard oldValue != newValue else { return }
+            tabTransitionTask?.cancel()
+            tabTransitionTask = Task { @MainActor in
+                withAnimation(.easeOut(duration: 0.14)) {
+                    articleOpacity = 0.0
+                }
+                try? await Task.sleep(nanoseconds: 140_000_000)
+                guard !Task.isCancelled else { return }
+                activeDisplayTab = newValue
+                withAnimation(.easeIn(duration: 0.18)) {
+                    articleOpacity = 1.0
+                }
+            }
+        }
+        .onDisappear {
+            tabTransitionTask?.cancel()
+        }
     }
     
     // MARK: - Sticky Top Section
@@ -87,20 +114,21 @@ struct SavedView: View {
         ZStack(alignment: .top) {
             // Progressive blur & gradient backdrop
             ZStack(alignment: .top) {
-                ProgressiveBlurView(height: 200, edge: .top)
+                ProgressiveBlurView(height: 160, edge: .top)
                 
                 LinearGradient(
                     stops: [
                         .init(color: Color.white.opacity(0.96), location: 0.0),
-                        .init(color: Color.white.opacity(0.85), location: 0.65),
+                        .init(color: Color.white.opacity(0.85), location: 0.70),
                         .init(color: Color.white.opacity(0.0), location: 1.0)
                     ],
                     startPoint: .top,
                     endPoint: .bottom
                 )
-                .frame(height: 200)
+                .frame(height: 160)
                 .ignoresSafeArea()
             }
+            .allowsHitTesting(false)
             
             VStack(spacing: 12) {
                 // Top Tabs: Saved & Annotations
@@ -112,7 +140,7 @@ struct SavedView: View {
             }
             .padding(.top, 4)
         }
-        .frame(height: 185, alignment: .top)
+        .frame(height: 130, alignment: .top)
     }
     
     // MARK: - Controls Row (Search, Date Sort, Filter)

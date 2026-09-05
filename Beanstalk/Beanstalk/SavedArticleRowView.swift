@@ -4,52 +4,47 @@ struct SavedArticleRowView: View {
     let article: SavedArticle
     let isAnnotationTab: Bool
     
+    @State private var loadedImage: UIImage? = nil
+    
+    private var halfWidth: CGFloat {
+        UIScreen.main.bounds.width / 2
+    }
+    
+    private let cardHeight: CGFloat = 120
+    
     var body: some View {
-        HStack(alignment: .top, spacing: 14) {
-            // Left: Article Thumbnail with Publisher Badge
+        HStack(alignment: .top, spacing: 0) {
+            // Left: Article Thumbnail with Publisher Badge (Half Width)
             ZStack(alignment: .topLeading) {
                 // Image
                 Group {
-                    if let url = article.imageURL {
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .success(let image):
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 170, height: 118)
-                                    .clipped()
-                            case .failure:
-                                Color.secondaryBackground
-                                    .frame(width: 170, height: 118)
-                                    .overlay(
-                                        Image(systemName: "photo")
-                                            .foregroundColor(.textSecondary.opacity(0.5))
-                                    )
-                            case .empty:
-                                Color.secondaryBackground
-                                    .frame(width: 170, height: 118)
-                            @unknown default:
-                                Color.secondaryBackground
-                                    .frame(width: 170, height: 118)
-                            }
-                        }
+                    if let image = loadedImage {
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: halfWidth, height: cardHeight)
+                            .clipped()
                     } else {
                         Color.secondaryBackground
-                            .frame(width: 170, height: 118)
+                            .frame(width: halfWidth, height: cardHeight)
+                            .overlay(
+                                Image(systemName: "photo")
+                                    .font(.system(size: 20))
+                                    .foregroundColor(.textSecondary.opacity(0.35))
+                            )
                     }
                 }
-                .frame(width: 170, height: 118)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .frame(width: halfWidth, height: cardHeight)
+                .clipShape(Rectangle())
                 
                 // Publisher Circular Badge
                 publisherBadge(name: article.publication)
                     .padding(.leading, 8)
                     .padding(.top, 8)
             }
-            .frame(width: 170, height: 118)
+            .frame(width: halfWidth, height: cardHeight)
             
-            // Right: Text Content & Annotation Indicator
+            // Right: Text Content & Annotation Indicator (Half Width)
             VStack(alignment: .leading, spacing: 6) {
                 Text(article.title)
                     .font(.custom("InclusiveSans-Regular", size: 14.5))
@@ -71,32 +66,47 @@ struct SavedArticleRowView: View {
                     annotationIndicator(for: article.annotation)
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .frame(height: 118)
+            .padding(.leading, 14)
+            .padding(.trailing, 16)
+            .padding(.vertical, 2)
+            .frame(width: halfWidth, height: cardHeight, alignment: .leading)
         }
-        .padding(.horizontal, 24)
         .padding(.vertical, 8)
         .contentShape(Rectangle())
+        .onAppear {
+            if let url = article.imageURL, loadedImage == nil {
+                if let cached = RemoteImageManager.shared.image(for: url) {
+                    loadedImage = cached
+                }
+            }
+        }
+        .task(id: article.imageURL) {
+            guard let url = article.imageURL else {
+                loadedImage = nil
+                return
+            }
+            if let cached = RemoteImageManager.shared.image(for: url) {
+                loadedImage = cached
+            } else {
+                let img = await RemoteImageManager.shared.load(url: url)
+                if !Task.isCancelled {
+                    withAnimation(.easeIn(duration: 0.15)) {
+                        loadedImage = img
+                    }
+                }
+            }
+        }
     }
     
     @ViewBuilder
     private func publisherBadge(name: String) -> some View {
-        ZStack {
-            Circle()
-                .fill(Color.white)
-                .frame(width: 32, height: 32)
-                .overlay(
-                    Circle()
-                        .stroke(Color(red: 223/255, green: 223/255, blue: 223/255), lineWidth: 1)
-                )
-                .shadow(color: Color.black.opacity(0.12), radius: 4, x: 0, y: 2)
-            
-            Image(name)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 22, height: 22)
-                .clipShape(Circle())
-        }
+        Image(name)
+            .resizable()
+            .scaledToFit()
+            .frame(width: 26, height: 26)
+            .background(Color.white)
+            .clipShape(Circle())
+            .shadow(color: Color.black.opacity(0.12), radius: 3, x: 0, y: 1)
     }
     
     @ViewBuilder

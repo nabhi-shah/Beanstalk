@@ -590,12 +590,8 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
     func textViewDidChangeSelection(_ textView: UITextView) {
         menuWorkItem?.cancel()
         menuWorkItem = nil
+        hideCustomMenu()
         hideActionMenu()
-        
-        // While typing a note, don't let selection shifts hide the note composer
-        if pendingNoteRange != nil {
-            return
-        }
         
         guard let range = textView.selectedTextRange, !range.isEmpty else {
             hideCustomMenu()
@@ -608,58 +604,23 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
             return
         }
         
-        // If the custom menu is ALREADY visible, dynamically update its position immediately!
-        if customMenuHostingController != nil {
-            self.updateCustomMenuPosition(for: nsRange)
-            return
-        }
-        
-        // If the menu is not yet visible, wait 1.0 second after the user stops touching the selectors
-        let workItem = DispatchWorkItem { [weak self, weak textView] in
-            guard let self = self, let textView = textView else { return }
-            guard let currentRange = textView.selectedTextRange, !currentRange.isEmpty,
-                  textView.selectedRange == nsRange else {
-                return
-            }
-            self.showCustomMenu(for: nsRange)
-        }
-        
-        self.menuWorkItem = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: workItem)
+        // Bad UX: Menu appears immediately with 0 delay while dragging, no dynamic tracking
+        self.showCustomMenu(for: nsRange)
     }
     
     func menuPosition(for range: NSRange, menuSize: CGSize) -> (frame: CGRect, isAbove: Bool, pointerMidX: CGFloat) {
         let boxes = rects(for: range)
-        guard !boxes.isEmpty else {
+        guard let firstBox = boxes.first else {
             let fallback = CGRect(x: max(8, self.bounds.midX - menuSize.width / 2), y: 10, width: menuSize.width, height: menuSize.height)
             return (fallback, true, fallback.midX)
         }
         
-        // Compute union rect encompassing all selected lines/segments
-        var unionRect = boxes[0]
-        for b in boxes.dropFirst() {
-            unionRect = unionRect.union(b)
-        }
-        
-        let firstBox = boxes.first ?? unionRect
-        let lastBox = boxes.last ?? unionRect
-        
-        // 12pt vertical clearance so menu never overlaps selected text
-        let clearance: CGFloat = 12
-        let isAbove = (unionRect.minY - menuSize.height - clearance) >= 8
-        
-        let targetMidX = isAbove ? firstBox.midX : lastBox.midX
-        let x = max(8, min(targetMidX - menuSize.width / 2, self.bounds.width - menuSize.width - 8))
-        
-        let y: CGFloat
-        if isAbove {
-            y = unionRect.minY - menuSize.height - clearance
-        } else {
-            y = unionRect.maxY + clearance
-        }
+        // Bad UX: Menu directly overlaps the selected text lines with 0 clearance
+        let x = max(8, min(firstBox.midX - menuSize.width / 2, self.bounds.width - menuSize.width - 8))
+        let y = firstBox.minY - menuSize.height / 2
         
         let frame = CGRect(origin: CGPoint(x: x, y: y), size: menuSize)
-        return (frame, isAbove, targetMidX)
+        return (frame, true, firstBox.midX)
     }
     
     func updateCustomMenuPosition(for range: NSRange) {
@@ -763,21 +724,8 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
                 self.selectedRange = NSRange(location: selRange.location, length: 0)
                 self.hideCustomMenu()
             },
-            onStartAddNote: { [weak self] in
-                guard let self = self else { return }
-                let selRange = self.currentMenuRange ?? range
-                guard selRange.length > 0 else { return }
-                self.pendingNoteRange = selRange
-                let greyColor = UIColor(red: 0.58, green: 0.62, blue: 0.67, alpha: 1.0)
-                self.addAndAnimateHighlight(range: selRange, color: greyColor, note: nil)
-            },
-            onCancelAddNote: { [weak self] in
-                guard let self = self else { return }
-                if let pending = self.pendingNoteRange {
-                    self.deleteHighlight(range: pending, notify: false)
-                    self.pendingNoteRange = nil
-                }
-            },
+            onStartAddNote: nil,
+            onCancelAddNote: nil,
             onSizeChange: { [weak self] newSize in
                 guard let self = self, let host = self.customMenuHostingController else { return }
                 let r = self.currentMenuRange ?? range

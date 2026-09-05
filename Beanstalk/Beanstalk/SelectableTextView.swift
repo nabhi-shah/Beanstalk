@@ -99,6 +99,7 @@ struct DeleteHighlightMenuView: View {
 // Liquid glass note viewer: snug fit-text horizontal capsule with red circular delete button
 struct NoteDisplayMenuView: View {
     var noteText: String
+    var isSingleLine: Bool = true
     var isAbove: Bool
     var pointerX: CGFloat
     var menuWidth: CGFloat
@@ -110,11 +111,11 @@ struct NoteDisplayMenuView: View {
             Text(noteText)
                 .font(.custom("InclusiveSans-Regular", size: 15))
                 .foregroundColor(.textDark)
-                .lineLimit(3)
+                .lineLimit(isSingleLine ? 1 : 4)
                 .multilineTextAlignment(.leading)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.leading, 14)
-                .padding(.vertical, 6)
+                .fixedSize(horizontal: isSingleLine, vertical: !isSingleLine)
+                .padding(.leading, 16)
+                .padding(.vertical, 8)
             
             Spacer(minLength: 4)
             
@@ -137,9 +138,9 @@ struct NoteDisplayMenuView: View {
                 .contentShape(Circle())
             }
             .buttonStyle(.plain)
-            .frame(width: 38, height: 38)
+            .frame(width: 36, height: 36)
             .contentShape(Circle())
-            .padding(.trailing, 6)
+            .padding(.trailing, 8)
         }
         .padding(.bottom, isAbove ? 8 : 0)
         .padding(.top, isAbove ? 0 : 8)
@@ -481,22 +482,36 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
         
         if highlight.isNote {
             let noteContent = highlight.note ?? ""
-            let maxAvailableWidth = min(self.bounds.width - 32, 280)
+            let maxAvailableWidth = min(self.bounds.width - 32, 290)
             
-            // Calculate snug dimensions for the fit-text note view capsule
+            // Calculate accurate dimensions for the fit-text note view capsule
             let font = UIFont(name: "InclusiveSans-Regular", size: 15) ?? UIFont.systemFont(ofSize: 15)
-            let maxTextWidth = maxAvailableWidth - 62
-            let textRect = (noteContent as NSString).boundingRect(
-                with: CGSize(width: maxTextWidth, height: 300),
-                options: [.usesLineFragmentOrigin, .usesFontLeading],
-                attributes: [.font: font],
-                context: nil
-            )
-            let textWidth = ceil(textRect.width)
-            let textHeight = ceil(textRect.height)
+            let horizontalPadding: CGFloat = 88 // 16 leading + 8 spacing + 4 minSpacer + 8 spacing + 36 btn + 8 trailing + 8 safety buffer
             
-            let contentWidth = max(88, min(textWidth + 62, maxAvailableWidth))
-            let contentHeight = max(46, min(textHeight + 24, 120))
+            let singleLineSize = (noteContent as NSString).size(withAttributes: [.font: font])
+            let singleLineWidth = ceil(singleLineSize.width)
+            
+            let isSingleLine = (singleLineWidth + horizontalPadding) <= maxAvailableWidth && !noteContent.contains("\n")
+            
+            let contentWidth: CGFloat
+            let contentHeight: CGFloat
+            
+            if isSingleLine {
+                contentWidth = max(100, singleLineWidth + horizontalPadding)
+                contentHeight = 46
+            } else {
+                let maxTextWidth = maxAvailableWidth - horizontalPadding
+                let textRect = (noteContent as NSString).boundingRect(
+                    with: CGSize(width: maxTextWidth, height: 300),
+                    options: [.usesLineFragmentOrigin, .usesFontLeading],
+                    attributes: [.font: font],
+                    context: nil
+                )
+                let textWidth = ceil(textRect.width)
+                let textHeight = ceil(textRect.height)
+                contentWidth = min(maxAvailableWidth, max(120, textWidth + horizontalPadding))
+                contentHeight = max(50, min(textHeight + 28, 140))
+            }
             
             let isAbove = (targetBox.minY - contentHeight - 14) >= 8
             let x = max(8, min(targetBox.midX - contentWidth / 2, self.bounds.width - contentWidth - 8))
@@ -505,6 +520,7 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
             
             let noteView = NoteDisplayMenuView(
                 noteText: noteContent,
+                isSingleLine: isSingleLine,
                 isAbove: isAbove,
                 pointerX: pointerX,
                 menuWidth: contentWidth,

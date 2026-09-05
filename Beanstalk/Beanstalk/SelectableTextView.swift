@@ -282,14 +282,11 @@ struct CustomMenuView: View {
                     .font(.custom("InclusiveSans-Regular", size: 16))
                     .focused($isFocused)
                     .foregroundColor(.textDark)
-                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .topLeading)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        isFocused = true
-                    }
+                    .frame(maxWidth: .infinity, minHeight: 36, alignment: .topLeading)
             }
+            .frame(maxHeight: 52)
             .padding(.horizontal, 16)
-            .padding(.top, isAbove ? 14 : 18)
+            .padding(.top, isAbove ? 12 : 16)
             
             Spacer(minLength: 0)
             
@@ -314,21 +311,21 @@ struct CustomMenuView: View {
                             .frame(width: 14, height: 14)
                             .foregroundColor(Color.textDark)
                     }
-                    .contentShape(Circle())
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .frame(width: 38, height: 38)
-                .contentShape(Circle())
-                .padding(.leading, 12)
-                .padding(.bottom, isAbove ? 14 : 8)
+                .padding(.leading, 8)
+                .padding(.bottom, isAbove ? 12 : 6)
                 
                 Spacer()
                 
                 Button(action: {
-                    guard !isCheckDisabled else { return }
+                    let trimmed = noteText.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !trimmed.isEmpty else { return }
                     UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                     isFocused = false
-                    onAddNote(noteText)
+                    onAddNote(trimmed)
                 }) {
                     ZStack {
                         Circle()
@@ -342,15 +339,12 @@ struct CustomMenuView: View {
                             .frame(width: 16, height: 16)
                             .foregroundColor(isCheckDisabled ? Color.textSecondary.opacity(0.35) : .white)
                     }
-                    .contentShape(Circle())
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .frame(width: 38, height: 38)
-                .contentShape(Circle())
-                .disabled(isCheckDisabled)
-                .padding(.trailing, 12)
-                .padding(.bottom, isAbove ? 14 : 8)
-                .animation(.spring(response: 0.25, dampingFraction: 0.75), value: isCheckDisabled)
+                .padding(.trailing, 8)
+                .padding(.bottom, isAbove ? 12 : 6)
             }
         }
         .frame(width: 285, height: 128)
@@ -400,10 +394,10 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
     
     override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
         let loc = gestureRecognizer.location(in: self)
-        if let host = customMenuHostingController, host.view.frame.insetBy(dx: -4, dy: -4).contains(loc) {
+        if let host = customMenuHostingController, host.view.frame.insetBy(dx: -8, dy: -8).contains(loc) {
             return false
         }
-        if let host = activeActionHostingController, host.view.frame.insetBy(dx: -4, dy: -4).contains(loc) {
+        if let host = activeActionHostingController, host.view.frame.insetBy(dx: -8, dy: -8).contains(loc) {
             return false
         }
         return super.gestureRecognizerShouldBegin(gestureRecognizer)
@@ -412,13 +406,13 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
         if let hostView = activeActionHostingController?.view {
             let p = touch.location(in: hostView)
-            if hostView.bounds.contains(p) {
+            if hostView.bounds.insetBy(dx: -8, dy: -8).contains(p) {
                 return false
             }
         }
         if let menuView = customMenuHostingController?.view {
             let p = touch.location(in: menuView)
-            if menuView.bounds.contains(p) {
+            if menuView.bounds.insetBy(dx: -8, dy: -8).contains(p) {
                 return false
             }
         }
@@ -426,14 +420,14 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
     }
     
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
-        if let host = activeActionHostingController, host.view.frame.contains(point) {
+        if let host = activeActionHostingController, host.view.frame.insetBy(dx: -8, dy: -8).contains(point) {
             let converted = convert(point, to: host.view)
             if let hit = host.view.hitTest(converted, with: event) {
                 return hit
             }
             return host.view
         }
-        if let host = customMenuHostingController, host.view.frame.contains(point) {
+        if let host = customMenuHostingController, host.view.frame.insetBy(dx: -8, dy: -8).contains(point) {
             let converted = convert(point, to: host.view)
             if let hit = host.view.hitTest(converted, with: event) {
                 return hit

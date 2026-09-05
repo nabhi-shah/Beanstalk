@@ -317,46 +317,50 @@ struct CustomMenuView: View {
             // Buttons overlaid at bottom — highest Z-order, always tappable
             HStack {
                 // Cancel button
-                ZStack {
-                    Circle()
-                        .fill(Color.black.opacity(0.06))
-                        .frame(width: 38, height: 38)
-                    
-                    Image("x")
-                        .renderingMode(.template)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 14, height: 14)
-                        .foregroundColor(Color.textDark)
+                Button(action: {
+                    cancelNote()
+                }) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.black.opacity(0.06))
+                            .frame(width: 38, height: 38)
+                        
+                        Image("x")
+                            .renderingMode(.template)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 14, height: 14)
+                            .foregroundColor(Color.textDark)
+                    }
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
                 }
-                .frame(width: 44, height: 44)
-                .contentShape(Rectangle())
-                .highPriorityGesture(
-                    TapGesture().onEnded { cancelNote() }
-                )
+                .buttonStyle(.plain)
                 .padding(.leading, 8)
                 .padding(.bottom, isAbove ? 12 : 6)
                 
                 Spacer()
                 
                 // Check / submit button
-                ZStack {
-                    Circle()
-                        .fill(isCheckDisabled ? Color.black.opacity(0.06) : Color.brandGreen)
-                        .frame(width: 38, height: 38)
-                    
-                    Image("check")
-                        .renderingMode(.template)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 16, height: 16)
-                        .foregroundColor(isCheckDisabled ? Color.textSecondary.opacity(0.35) : .white)
+                Button(action: {
+                    submitNote()
+                }) {
+                    ZStack {
+                        Circle()
+                            .fill(isCheckDisabled ? Color.black.opacity(0.06) : Color.brandGreen)
+                            .frame(width: 38, height: 38)
+                        
+                        Image("check")
+                            .renderingMode(.template)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 16, height: 16)
+                            .foregroundColor(isCheckDisabled ? Color.textSecondary.opacity(0.35) : .white)
+                    }
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
                 }
-                .frame(width: 44, height: 44)
-                .contentShape(Rectangle())
-                .highPriorityGesture(
-                    TapGesture().onEnded { submitNote() }
-                )
+                .buttonStyle(.plain)
                 .padding(.trailing, 8)
                 .padding(.bottom, isAbove ? 12 : 6)
             }
@@ -380,6 +384,7 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
     private let highlightsOverlay = UIView()
     private var highlightViewsMap: [NSRange: [UIView]] = [:]
     private var currentHighlights: [HighlightRange] = []
+    private var greyPreviewViews: [UIView] = []
     
     override init(frame: CGRect, textContainer: NSTextContainer?) {
         super.init(frame: frame, textContainer: textContainer)
@@ -393,8 +398,10 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
     
     private func setup() {
         self.delegate = self
+        self.clipsToBounds = false
         highlightsOverlay.backgroundColor = .clear
         highlightsOverlay.isUserInteractionEnabled = false
+        highlightsOverlay.clipsToBounds = false
         self.addSubview(highlightsOverlay)
         
         let tap = UITapGestureRecognizer(target: self, action: #selector(handleHighlightTap(_:)))
@@ -407,12 +414,23 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
         return true
     }
     
+    // Allow touch events that land on the custom menu or action popovers, even when they extend outside bounds (crucial for short texts like Card 0)
+    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+        if let host = customMenuHostingController, host.view.frame.insetBy(dx: -16, dy: -16).contains(point) {
+            return true
+        }
+        if let host = activeActionHostingController, host.view.frame.insetBy(dx: -16, dy: -16).contains(point) {
+            return true
+        }
+        return super.point(inside: point, with: event)
+    }
+    
     override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
         let loc = gestureRecognizer.location(in: self)
-        if let host = customMenuHostingController, host.view.frame.insetBy(dx: -4, dy: -4).contains(loc) {
+        if let host = customMenuHostingController, host.view.frame.insetBy(dx: -16, dy: -16).contains(loc) {
             return false
         }
-        if let host = activeActionHostingController, host.view.frame.insetBy(dx: -4, dy: -4).contains(loc) {
+        if let host = activeActionHostingController, host.view.frame.insetBy(dx: -16, dy: -16).contains(loc) {
             return false
         }
         return super.gestureRecognizerShouldBegin(gestureRecognizer)
@@ -421,13 +439,13 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
         if let hostView = activeActionHostingController?.view {
             let p = touch.location(in: hostView)
-            if hostView.bounds.contains(p) {
+            if hostView.bounds.insetBy(dx: -16, dy: -16).contains(p) {
                 return false
             }
         }
         if let menuView = customMenuHostingController?.view {
             let p = touch.location(in: menuView)
-            if menuView.bounds.contains(p) {
+            if menuView.bounds.insetBy(dx: -16, dy: -16).contains(p) {
                 return false
             }
         }
@@ -435,14 +453,14 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
     }
     
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
-        if let host = activeActionHostingController, host.view.frame.insetBy(dx: -8, dy: -8).contains(point) {
+        if let host = activeActionHostingController, host.view.frame.insetBy(dx: -16, dy: -16).contains(point) {
             let converted = convert(point, to: host.view)
             if let hit = host.view.hitTest(converted, with: event) {
                 return hit
             }
             return host.view
         }
-        if let host = customMenuHostingController, host.view.frame.insetBy(dx: -8, dy: -8).contains(point) {
+        if let host = customMenuHostingController, host.view.frame.insetBy(dx: -16, dy: -16).contains(point) {
             let converted = convert(point, to: host.view)
             if let hit = host.view.hitTest(converted, with: event) {
                 return hit
@@ -452,7 +470,43 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
         return super.hitTest(point, with: event)
     }
     
+    func showGreyPreviewHighlight(for range: NSRange) {
+        removeGreyPreviewHighlight()
+        let boundingBoxes = rects(for: range)
+        guard !boundingBoxes.isEmpty else { return }
+        
+        let greyColor = UIColor(red: 0.58, green: 0.62, blue: 0.67, alpha: 1.0)
+        
+        for (index, box) in boundingBoxes.enumerated() {
+            let expanded = box.insetBy(dx: -2, dy: -1)
+            let v = UIView()
+            v.layer.anchorPoint = CGPoint(x: 0, y: 0.5)
+            v.frame = expanded
+            v.backgroundColor = greyColor.withAlphaComponent(0.32)
+            v.layer.cornerRadius = 4
+            v.layer.masksToBounds = true
+            v.isUserInteractionEnabled = false
+            v.transform = CGAffineTransform(scaleX: 0.001, y: 1.0)
+            v.alpha = 0.0
+            
+            highlightsOverlay.addSubview(v)
+            greyPreviewViews.append(v)
+            
+            let staggerDelay = Double(index) * 0.12
+            UIView.animate(withDuration: 0.6, delay: staggerDelay, options: [.curveEaseInOut]) {
+                v.transform = .identity
+                v.alpha = 1.0
+            }
+        }
+    }
+    
+    func removeGreyPreviewHighlight() {
+        greyPreviewViews.forEach { $0.removeFromSuperview() }
+        greyPreviewViews.removeAll()
+    }
+    
     @objc private func handleHighlightTap(_ gesture: UITapGestureRecognizer) {
+        if pendingNoteRange != nil { return }
         let point = gesture.location(in: self)
         
         // 1. Check if tap intersects any existing highlight view frame
@@ -722,12 +776,9 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
                 guard let self = self, let note = noteText, !note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
                 let selRange = self.pendingNoteRange ?? self.currentMenuRange ?? range
                 self.pendingNoteRange = nil
+                self.removeGreyPreviewHighlight()
                 let greyColor = UIColor(red: 0.58, green: 0.62, blue: 0.67, alpha: 1.0)
-                if let idx = self.currentHighlights.firstIndex(where: { $0.range == selRange }) {
-                    self.currentHighlights[idx].note = note
-                } else {
-                    self.addAndAnimateHighlight(range: selRange, color: greyColor, note: note)
-                }
+                self.addAndAnimateHighlight(range: selRange, color: greyColor, note: note)
                 self.onAddNote?(selRange, note)
                 self.selectedRange = NSRange(location: selRange.location, length: 0)
                 self.hideCustomMenu()
@@ -737,15 +788,12 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
                 let selRange = self.currentMenuRange ?? range
                 guard selRange.length > 0 else { return }
                 self.pendingNoteRange = selRange
-                let greyColor = UIColor(red: 0.58, green: 0.62, blue: 0.67, alpha: 1.0)
-                self.addAndAnimateHighlight(range: selRange, color: greyColor, note: nil)
+                self.showGreyPreviewHighlight(for: selRange)
             },
             onCancelAddNote: { [weak self] in
                 guard let self = self else { return }
-                if let pending = self.pendingNoteRange {
-                    self.deleteHighlight(range: pending, notify: false)
-                    self.pendingNoteRange = nil
-                }
+                self.removeGreyPreviewHighlight()
+                self.pendingNoteRange = nil
             },
             onSizeChange: { [weak self] newSize in
                 guard let self = self, let host = self.customMenuHostingController else { return }
@@ -791,12 +839,9 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
                 guard let self = self, let note = noteText, !note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
                 let selRange = self.pendingNoteRange ?? self.currentMenuRange ?? range
                 self.pendingNoteRange = nil
+                self.removeGreyPreviewHighlight()
                 let greyColor = UIColor(red: 0.58, green: 0.62, blue: 0.67, alpha: 1.0)
-                if let idx = self.currentHighlights.firstIndex(where: { $0.range == selRange }) {
-                    self.currentHighlights[idx].note = note
-                } else {
-                    self.addAndAnimateHighlight(range: selRange, color: greyColor, note: note)
-                }
+                self.addAndAnimateHighlight(range: selRange, color: greyColor, note: note)
                 self.onAddNote?(selRange, note)
                 self.selectedRange = NSRange(location: selRange.location, length: 0)
                 self.hideCustomMenu()
@@ -806,15 +851,12 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
                 let selRange = self.currentMenuRange ?? range
                 guard selRange.length > 0 else { return }
                 self.pendingNoteRange = selRange
-                let greyColor = UIColor(red: 0.58, green: 0.62, blue: 0.67, alpha: 1.0)
-                self.addAndAnimateHighlight(range: selRange, color: greyColor, note: nil)
+                self.showGreyPreviewHighlight(for: selRange)
             },
             onCancelAddNote: { [weak self] in
                 guard let self = self else { return }
-                if let pending = self.pendingNoteRange {
-                    self.deleteHighlight(range: pending, notify: false)
-                    self.pendingNoteRange = nil
-                }
+                self.removeGreyPreviewHighlight()
+                self.pendingNoteRange = nil
             },
             onSizeChange: { [weak self] newSize in
                 guard let self = self, let host = self.customMenuHostingController else { return }
@@ -844,10 +886,8 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
     }
     
     func hideCustomMenu() {
-        if let pending = pendingNoteRange {
-            deleteHighlight(range: pending, notify: false)
-            pendingNoteRange = nil
-        }
+        removeGreyPreviewHighlight()
+        pendingNoteRange = nil
         currentMenuRange = nil
         customMenuHostingController?.view.removeFromSuperview()
         customMenuHostingController = nil
@@ -1068,6 +1108,7 @@ struct SelectableTextView: UIViewRepresentable {
         textView.textContainerInset = .zero
         textView.textContainer.lineFragmentPadding = 0
         textView.tintColor = tintColor
+        textView.clipsToBounds = false
         
         textView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         

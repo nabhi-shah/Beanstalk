@@ -88,11 +88,10 @@ struct DeleteHighlightMenuView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
+            .contentShape(Capsule())
         }
-        .background(
-            Color.clear
-                .glassEffect(.regular.tint(Color.red.opacity(0.65)), in: .capsule)
-        )
+        .buttonStyle(.plain)
+        .glassEffect(.regular.tint(Color.red.opacity(0.65)), in: .capsule)
         .shadow(color: Color.red.opacity(0.2), radius: 8, x: 0, y: 4)
     }
 }
@@ -135,9 +134,12 @@ struct NoteDisplayMenuView: View {
                         .frame(width: 14, height: 14)
                         .foregroundColor(.white)
                 }
+                .contentShape(Circle())
             }
             .buttonStyle(.plain)
-            .padding(.trailing, 10)
+            .frame(width: 38, height: 38)
+            .contentShape(Circle())
+            .padding(.trailing, 6)
         }
         .padding(.bottom, isAbove ? 8 : 0)
         .padding(.top, isAbove ? 0 : 8)
@@ -226,6 +228,7 @@ struct CustomMenuView: View {
             HStack(spacing: 4) {
                 ForEach(colors, id: \.self) { color in
                     Button(action: {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
                         onHighlight(color)
                     }) {
                         Circle()
@@ -233,6 +236,7 @@ struct CustomMenuView: View {
                             .frame(width: 38, height: 38)
                     }
                     .buttonStyle(.plain)
+                    .contentShape(Circle())
                     .frame(width: 38, height: 38)
                 }
             }
@@ -242,6 +246,7 @@ struct CustomMenuView: View {
                 .padding(.horizontal, 8)
             
             Button(action: {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 onStartAddNote?()
                 withAnimation(.spring(response: 0.44, dampingFraction: 0.74, blendDuration: 0.12)) {
                     isAddingNote = true
@@ -253,6 +258,8 @@ struct CustomMenuView: View {
                     .lineLimit(1)
                     .fixedSize(horizontal: true, vertical: false)
                     .padding(.trailing, 12)
+                    .padding(.vertical, 8)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         }
@@ -296,8 +303,11 @@ struct CustomMenuView: View {
                             .frame(width: 14, height: 14)
                             .foregroundColor(Color.textDark)
                     }
+                    .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
+                .frame(width: 38, height: 38)
+                .contentShape(Circle())
                 .padding(.leading, 12)
                 .padding(.bottom, isAbove ? 14 : 8)
                 
@@ -320,8 +330,11 @@ struct CustomMenuView: View {
                             .frame(width: 16, height: 16)
                             .foregroundColor(isCheckDisabled ? Color.textSecondary.opacity(0.35) : .white)
                     }
+                    .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
+                .frame(width: 38, height: 38)
+                .contentShape(Circle())
                 .disabled(isCheckDisabled)
                 .padding(.trailing, 12)
                 .padding(.bottom, isAbove ? 14 : 8)
@@ -373,22 +386,47 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
         return true
     }
     
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-        if let hostView = activeActionHostingController?.view, touch.view?.isDescendant(of: hostView) == true {
+    override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        let loc = gestureRecognizer.location(in: self)
+        if let host = customMenuHostingController, host.view.frame.insetBy(dx: -4, dy: -4).contains(loc) {
             return false
         }
-        if let menuView = customMenuHostingController?.view, touch.view?.isDescendant(of: menuView) == true {
+        if let host = activeActionHostingController, host.view.frame.insetBy(dx: -4, dy: -4).contains(loc) {
             return false
+        }
+        return super.gestureRecognizerShouldBegin(gestureRecognizer)
+    }
+    
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        if let hostView = activeActionHostingController?.view {
+            let p = touch.location(in: hostView)
+            if hostView.bounds.contains(p) {
+                return false
+            }
+        }
+        if let menuView = customMenuHostingController?.view {
+            let p = touch.location(in: menuView)
+            if menuView.bounds.contains(p) {
+                return false
+            }
         }
         return true
     }
     
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         if let host = activeActionHostingController, host.view.frame.contains(point) {
-            return host.view.hitTest(convert(point, to: host.view), with: event)
+            let converted = convert(point, to: host.view)
+            if let hit = host.view.hitTest(converted, with: event) {
+                return hit
+            }
+            return host.view
         }
         if let host = customMenuHostingController, host.view.frame.contains(point) {
-            return host.view.hitTest(convert(point, to: host.view), with: event)
+            let converted = convert(point, to: host.view)
+            if let hit = host.view.hitTest(converted, with: event) {
+                return hit
+            }
+            return host.view
         }
         return super.hitTest(point, with: event)
     }
@@ -475,7 +513,7 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
             self.addSubview(host.view)
             self.activeActionHostingController = host
             
-            UIView.animate(withDuration: 0.28, delay: 0, usingSpringWithDamping: 0.78, initialSpringVelocity: 0) {
+            UIView.animate(withDuration: 0.28, delay: 0, usingSpringWithDamping: 0.78, initialSpringVelocity: 0, options: [.allowUserInteraction, .beginFromCurrentState]) {
                 host.view.transform = .identity
                 host.view.alpha = 1
             }
@@ -501,7 +539,7 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
             self.addSubview(host.view)
             self.activeActionHostingController = host
             
-            UIView.animate(withDuration: 0.28, delay: 0, usingSpringWithDamping: 0.78, initialSpringVelocity: 0) {
+            UIView.animate(withDuration: 0.28, delay: 0, usingSpringWithDamping: 0.78, initialSpringVelocity: 0, options: [.allowUserInteraction, .beginFromCurrentState]) {
                 host.view.transform = .identity
                 host.view.alpha = 1
             }
@@ -552,8 +590,12 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
     func textViewDidChangeSelection(_ textView: UITextView) {
         menuWorkItem?.cancel()
         menuWorkItem = nil
-        hideCustomMenu()
         hideActionMenu()
+        
+        // While typing a note, don't let selection shifts hide the note composer
+        if pendingNoteRange != nil {
+            return
+        }
         
         guard let range = textView.selectedTextRange, !range.isEmpty else {
             hideCustomMenu()
@@ -755,7 +797,7 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
         self.addSubview(host.view)
         self.customMenuHostingController = host
         
-        UIView.animate(withDuration: 0.28, delay: 0, usingSpringWithDamping: 0.78, initialSpringVelocity: 0) {
+        UIView.animate(withDuration: 0.28, delay: 0, usingSpringWithDamping: 0.78, initialSpringVelocity: 0, options: [.allowUserInteraction, .beginFromCurrentState]) {
             host.view.transform = .identity
             host.view.alpha = 1
         }

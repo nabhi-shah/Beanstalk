@@ -202,6 +202,7 @@ struct ArticleRowView: View {
     @State private var summaryHighlights: [HighlightRange] = []
     @State private var isCard1Loaded: Bool = false
     @State private var isCard2Loaded: Bool = false
+    @State private var saveButtonState: SaveButtonState = .unsaved
     @State private var loadedImage: UIImage? = nil
     
     private var currentImage: Image? {
@@ -614,10 +615,9 @@ struct ArticleRowView: View {
             
             Spacer()
             
-            AdaptiveGlassIconButton(
-                iconName: "bookmark-simple",
-                overrideIsDark: article.isTrailingDark,
-                action: { }
+            AdaptiveGlassSaveButton(
+                state: $saveButtonState,
+                overrideIsDark: article.isTrailingDark
             )
         }
         .padding(.horizontal, 24)
@@ -1139,6 +1139,168 @@ struct GrabChevronIndicator: View {
                 visibleCount = 0
             }
             try? await Task.sleep(nanoseconds: pauseDuration)
+        }
+    }
+}
+
+// MARK: - Dynamic Adaptive Glass Save Button with Blur-Based Morphing
+enum SaveButtonState: Equatable {
+    case unsaved
+    case loading
+    case saved
+}
+
+struct BlurMorphModifier: ViewModifier {
+    let isActive: Bool
+    var blurRadius: CGFloat = 10
+    var scale: CGFloat = 0.72
+    
+    func body(content: Content) -> some View {
+        content
+            .compositingGroup()
+            .blur(radius: isActive ? 0 : blurRadius)
+            .scaleEffect(isActive ? 1.0 : scale)
+            .opacity(isActive ? 1.0 : 0.0)
+    }
+}
+
+extension View {
+    func blurMorph(active: Bool, blurRadius: CGFloat = 10, scale: CGFloat = 0.72) -> some View {
+        self.modifier(BlurMorphModifier(isActive: active, blurRadius: blurRadius, scale: scale))
+    }
+}
+
+struct SaveLoadingSpinner: View {
+    let color: Color
+    @State private var isSpinning: Bool = false
+    
+    var body: some View {
+        Circle()
+            .trim(from: 0.08, to: 0.82)
+            .stroke(
+                color,
+                style: StrokeStyle(lineWidth: 2.2, lineCap: .round)
+            )
+            .frame(width: 19, height: 19)
+            .rotationEffect(.degrees(isSpinning ? 360 : 0))
+            .animation(
+                .linear(duration: 0.8).repeatForever(autoreverses: false),
+                value: isSpinning
+            )
+            .onAppear {
+                isSpinning = true
+            }
+    }
+}
+
+struct AdaptiveGlassSaveButton: View {
+    @Binding var state: SaveButtonState
+    var overrideIsDark: Bool? = nil
+    
+    @Environment(\.colorScheme) private var resolvedGlassState
+    @State private var saveTask: Task<Void, Never>? = nil
+    
+    private var isDark: Bool {
+        if let override = overrideIsDark {
+            return override
+        }
+        return resolvedGlassState == .dark
+    }
+    
+    private func handleTap() {
+        guard state != .loading else { return }
+        
+        saveTask?.cancel()
+        saveTask = nil
+        
+        if state == .saved {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            withAnimation(.spring(response: 0.42, dampingFraction: 0.76)) {
+                state = .unsaved
+            }
+            return
+        }
+        
+        // Unsaved -> Loading
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        withAnimation(.spring(response: 0.38, dampingFraction: 0.75)) {
+            state = .loading
+        }
+        
+        // Simulate save operation (0.75s) then morph to green-tinted brand green saved state
+        saveTask = Task {
+            try? await Task.sleep(nanoseconds: 750_000_000)
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                guard state == .loading else { return }
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                withAnimation(.spring(response: 0.46, dampingFraction: 0.70)) {
+                    state = .saved
+                }
+            }
+        }
+    }
+    
+    var body: some View {
+        Button(action: handleTap) {
+            ZStack {
+                // 1. Unsaved State (Outline Bookmark)
+                Image("bookmark-simple")
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 20, height: 20)
+                    .foregroundColor(isDark ? Color(white: 0.88) : .textDark)
+                    .blurMorph(active: state == .unsaved)
+                
+                // 2. Loading State (Rotating Spinner)
+                SaveLoadingSpinner(color: isDark || state == .saved ? .white : Color.textDark.opacity(0.85))
+                    .blurMorph(active: state == .loading)
+                
+                // 3. Saved State (White Fill Save Button)
+                Group {
+                    if UIImage(named: "bookmark-simple-fill") != nil {
+                        Image("bookmark-simple-fill")
+                            .renderingMode(.template)
+                            .resizable()
+                            .scaledToFit()
+                    } else {
+                        Image(systemName: "bookmark.fill")
+                            .resizable()
+                            .scaledToFit()
+                    }
+                }
+                .frame(width: 20, height: 20)
+                .foregroundColor(.white)
+                .blurMorph(active: state == .saved)
+            }
+            .frame(width: 44, height: 44)
+            .background(
+                Circle()
+                    .fill(Color.brandGreen)
+                    .opacity(state == .saved ? 0.95 : 0.0)
+                    .blur(radius: state == .saved ? 0 : 8)
+                    .scaleEffect(state == .saved ? 1.0 : 0.72)
+            )
+            .contentShape(Circle())
+        }
+        .buttonStyle(AdaptiveGlassRippleButtonStyle(overrideIsDark: state == .saved ? true : overrideIsDark))
+        .glassEffect(
+            state == .saved
+                ? .regular.tint(Color.brandGreen.opacity(0.85))
+                : .regular,
+            in: .circle
+        )
+        .shadow(
+            color: state == .saved ? Color.brandGreen.opacity(0.4) : Color.black.opacity(0.06),
+            radius: state == .saved ? 8 : 6,
+            x: 0,
+            y: state == .saved ? 3 : 2
+        )
+        .animation(.spring(response: 0.44, dampingFraction: 0.74), value: state)
+        .onDisappear {
+            saveTask?.cancel()
+            saveTask = nil
         }
     }
 }

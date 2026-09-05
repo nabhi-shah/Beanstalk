@@ -307,7 +307,7 @@ struct ArticleRowView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
                 .overlay(
                     Color.white.opacity(0.01)
-                        .modifier(RippleModifier(rippleColor: Color.black.opacity(0.35), touchLocation: touchLocation, isPressed: isLongPressing && frontCardIndex == 2))
+                        .modifier(RippleModifier(rippleColor: Color.black.opacity(0.35), touchLocation: touchLocation, isPressed: isLongPressing && frontCardIndex == 1))
                         .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
                         .allowsHitTesting(false)
                 )
@@ -686,23 +686,19 @@ struct ArticleRowView: View {
     private func chatCard(image: Image?) -> some View {
         ZStack {
             if isExpanded {
-                if !isAnnotationModeActive {
-                    // Bottom Grab Handle for Swiping Cards
-                    // Rendered before the content so it doesn't blur the chat input
-                    grabHandle(isFront: frontCardIndex == 2)
-                        .transition(.opacity)
-                }
-                
                 VStack(spacing: 0) {
                     articleHeaderView(image: image)
                     
-                    // Middle swipeable area in chat card
-                    Color.clear
-                        .contentShape(Rectangle())
-                        .overlay(carouselGestureLayer())
+                    Spacer()
                     
                     chatInputView()
-                        .padding(.bottom, 48) // Snug against the grab handle area
+                        .padding(.bottom, 52) // Snug against the grab handle area
+                }
+                
+                if !isAnnotationModeActive {
+                    // Bottom Grab Handle for Swiping Cards
+                    grabHandle(isFront: frontCardIndex == 2)
+                        .transition(.opacity)
                 }
             }
         }

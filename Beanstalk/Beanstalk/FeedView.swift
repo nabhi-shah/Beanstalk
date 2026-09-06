@@ -204,6 +204,7 @@ struct ArticleRowView: View {
     @State private var isCard2Loaded: Bool = false
     @State private var saveButtonState: SaveButtonState = .unsaved
     @State private var loadedImage: UIImage? = nil
+    @State private var keyboardHeight: CGFloat = 0
     
     private var currentImage: Image? {
         if let loadedImage = loadedImage {
@@ -360,6 +361,19 @@ struct ArticleRowView: View {
                 .frame(height: 20)
                 .transition(.opacity)
                 .animation(.easeInOut(duration: 0.2), value: frontCardIndex)
+            }
+        }
+        .offset(y: -keyboardHeight * 0.85) // Shift cards up by 85% of keyboard height so top text isn't fully lost
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
+            if isExpanded, let frame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
+                withAnimation(.easeOut(duration: 0.25)) {
+                    self.keyboardHeight = frame.height
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            withAnimation(.easeOut(duration: 0.25)) {
+                self.keyboardHeight = 0
             }
         }
         .onChange(of: isExpanded) { oldValue, newValue in

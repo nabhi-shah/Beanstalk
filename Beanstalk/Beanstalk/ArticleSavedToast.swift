@@ -150,7 +150,7 @@ struct ArticleSavedToast: View {
             }
 
             AccessibilityNotification.Announcement("Article Saved. View Saved button available.").post()
-            try await Task.sleep(for: .seconds(voiceOverEnabled ? 8 : 4))
+            try await Task.sleep(for: .seconds(voiceOverEnabled ? 6 : 2.5))
 
             withAnimation(.easeOut(duration: 0.18)) {
                 contentVisible = false

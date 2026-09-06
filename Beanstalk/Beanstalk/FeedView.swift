@@ -1190,13 +1190,6 @@ struct AdaptiveGlassSaveButton: View {
     @Environment(\.colorScheme) private var resolvedGlassState
     @Environment(\.articleDidSave) private var articleDidSave
     
-    private var isDark: Bool {
-        if let override = overrideIsDark {
-            return override
-        }
-        return resolvedGlassState == .dark
-    }
-    
     private func handleTap() {
         if state == .saved {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
@@ -1215,42 +1208,7 @@ struct AdaptiveGlassSaveButton: View {
     
     var body: some View {
         Button(action: handleTap) {
-            ZStack {
-                // 1. Unsaved State (Outline Bookmark)
-                Image("bookmark-simple")
-                    .renderingMode(.template)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 20, height: 20)
-                    .foregroundColor(isDark ? Color(white: 0.88) : .textDark)
-                    .blurMorph(active: state == .unsaved)
-                
-                // 2. Saved State (White Fill Save Button)
-                Group {
-                    if UIImage(named: "bookmark-simple-fill") != nil {
-                        Image("bookmark-simple-fill")
-                            .renderingMode(.template)
-                            .resizable()
-                            .scaledToFit()
-                    } else {
-                        Image(systemName: "bookmark.fill")
-                            .resizable()
-                            .scaledToFit()
-                    }
-                }
-                .frame(width: 20, height: 20)
-                .foregroundColor(.white)
-                .blurMorph(active: state == .saved)
-            }
-            .frame(width: 44, height: 44)
-            .background(
-                Circle()
-                    .fill(Color.brandGreen)
-                    .opacity(state == .saved ? 0.95 : 0.0)
-                    .blur(radius: state == .saved ? 0 : 8)
-                    .scaleEffect(state == .saved ? 1.0 : 0.72)
-            )
-            .contentShape(Circle())
+            AdaptiveGlassSaveButtonContent(state: state, overrideIsDark: overrideIsDark)
         }
         .accessibilityLabel(state == .saved ? "Unsave article" : "Save article")
         .buttonStyle(AdaptiveGlassRippleButtonStyle(overrideIsDark: state == .saved ? true : overrideIsDark))
@@ -1267,6 +1225,60 @@ struct AdaptiveGlassSaveButton: View {
             y: state == .saved ? 3 : 2
         )
         .animation(.spring(response: 0.44, dampingFraction: 0.74), value: state)
+    }
+}
+
+// 💡 Isolated subview to extract the adapted @Environment(\.colorScheme) resolved by .glassEffect()
+struct AdaptiveGlassSaveButtonContent: View {
+    let state: SaveButtonState
+    var overrideIsDark: Bool? = nil
+    
+    @Environment(\.colorScheme) private var resolvedGlassState
+    
+    private var isDark: Bool {
+        if let override = overrideIsDark {
+            return override
+        }
+        return resolvedGlassState == .dark
+    }
+    
+    var body: some View {
+        ZStack {
+            // 1. Unsaved State (Outline Bookmark)
+            Image("bookmark-simple")
+                .renderingMode(.template)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 20, height: 20)
+                .foregroundColor(isDark ? Color(white: 0.88) : .textDark)
+                .blurMorph(active: state == .unsaved)
+            
+            // 2. Saved State (White Fill Save Button)
+            Group {
+                if UIImage(named: "bookmark-simple-fill") != nil {
+                    Image("bookmark-simple-fill")
+                        .renderingMode(.template)
+                        .resizable()
+                        .scaledToFit()
+                } else {
+                    Image(systemName: "bookmark.fill")
+                        .resizable()
+                        .scaledToFit()
+                }
+            }
+            .frame(width: 20, height: 20)
+            .foregroundColor(.white)
+            .blurMorph(active: state == .saved)
+        }
+        .frame(width: 44, height: 44)
+        .background(
+            Circle()
+                .fill(Color.brandGreen)
+                .opacity(state == .saved ? 0.95 : 0.0)
+                .blur(radius: state == .saved ? 0 : 8)
+                .scaleEffect(state == .saved ? 1.0 : 0.72)
+        )
+        .contentShape(Circle())
     }
 }
 

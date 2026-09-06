@@ -40,4 +40,40 @@ final class BeanstalkUITests: XCTestCase {
             XCUIApplication().launch()
         }
     }
+
+    @MainActor
+    func testSaveToastOpensSavedTab() throws {
+        let app = XCUIApplication()
+        app.launch()
+        try XCTUnwrap(app.buttons.matching(identifier: "Login").allElementsBoundByIndex.last).tap()
+        let publication = app.staticTexts["Financial Times"].firstMatch
+        XCTAssertTrue(publication.waitForExistence(timeout: 5))
+        publication.tap()
+        app.buttons["Next"].tap()
+
+        let article = app.staticTexts["The Data Center Backlash Bursts Into the Midterms"].firstMatch
+        XCTAssertTrue(article.waitForExistence(timeout: 8))
+        article.tap()
+        let save = app.buttons["Save article"].firstMatch
+        XCTAssertTrue(save.waitForExistence(timeout: 5))
+        let hittable = NSPredicate(format: "hittable == true")
+        expectation(for: hittable, evaluatedWith: save)
+        waitForExpectations(timeout: 5)
+        save.tap()
+
+        let viewSaved = app.buttons["viewSavedToastButton"]
+        XCTAssertTrue(viewSaved.waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Article Saved"].exists)
+        XCTAssertTrue(app.buttons["Unsave article"].firstMatch.exists)
+        expectation(for: hittable, evaluatedWith: viewSaved)
+        waitForExpectations(timeout: 3)
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Article Saved toast"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+        viewSaved.tap()
+
+        XCTAssertTrue(app.staticTexts["New App Connects Local Farmers Directly With Consumers for Fresher Produce"].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertFalse(viewSaved.exists)
+    }
 }

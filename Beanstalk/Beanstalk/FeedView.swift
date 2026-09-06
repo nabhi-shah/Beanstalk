@@ -1146,7 +1146,6 @@ struct GrabChevronIndicator: View {
 // MARK: - Dynamic Adaptive Glass Save Button with Blur-Based Morphing
 enum SaveButtonState: Equatable {
     case unsaved
-    case loading
     case saved
 }
 
@@ -1170,35 +1169,12 @@ extension View {
     }
 }
 
-struct SaveLoadingSpinner: View {
-    let color: Color
-    @State private var isSpinning: Bool = false
-    
-    var body: some View {
-        Circle()
-            .trim(from: 0.08, to: 0.82)
-            .stroke(
-                color,
-                style: StrokeStyle(lineWidth: 2.2, lineCap: .round)
-            )
-            .frame(width: 19, height: 19)
-            .rotationEffect(.degrees(isSpinning ? 360 : 0))
-            .animation(
-                .linear(duration: 0.8).repeatForever(autoreverses: false),
-                value: isSpinning
-            )
-            .onAppear {
-                isSpinning = true
-            }
-    }
-}
-
 struct AdaptiveGlassSaveButton: View {
     @Binding var state: SaveButtonState
     var overrideIsDark: Bool? = nil
     
     @Environment(\.colorScheme) private var resolvedGlassState
-    @State private var saveTask: Task<Void, Never>? = nil
+    @Environment(\.articleDidSave) private var articleDidSave
     
     private var isDark: Bool {
         if let override = overrideIsDark {
@@ -1208,11 +1184,6 @@ struct AdaptiveGlassSaveButton: View {
     }
     
     private func handleTap() {
-        guard state != .loading else { return }
-        
-        saveTask?.cancel()
-        saveTask = nil
-        
         if state == .saved {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             withAnimation(.spring(response: 0.42, dampingFraction: 0.76)) {
@@ -1221,24 +1192,11 @@ struct AdaptiveGlassSaveButton: View {
             return
         }
         
-        // Unsaved -> Loading
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-        withAnimation(.spring(response: 0.38, dampingFraction: 0.75)) {
-            state = .loading
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        withAnimation(.spring(response: 0.46, dampingFraction: 0.70)) {
+            state = .saved
         }
-        
-        // Simulate save operation (0.75s) then morph to green-tinted brand green saved state
-        saveTask = Task {
-            try? await Task.sleep(nanoseconds: 750_000_000)
-            guard !Task.isCancelled else { return }
-            await MainActor.run {
-                guard state == .loading else { return }
-                UINotificationFeedbackGenerator().notificationOccurred(.success)
-                withAnimation(.spring(response: 0.46, dampingFraction: 0.70)) {
-                    state = .saved
-                }
-            }
-        }
+        articleDidSave()
     }
     
     var body: some View {
@@ -1253,11 +1211,7 @@ struct AdaptiveGlassSaveButton: View {
                     .foregroundColor(isDark ? Color(white: 0.88) : .textDark)
                     .blurMorph(active: state == .unsaved)
                 
-                // 2. Loading State (Rotating Spinner)
-                SaveLoadingSpinner(color: isDark || state == .saved ? .white : Color.textDark.opacity(0.85))
-                    .blurMorph(active: state == .loading)
-                
-                // 3. Saved State (White Fill Save Button)
+                // 2. Saved State (White Fill Save Button)
                 Group {
                     if UIImage(named: "bookmark-simple-fill") != nil {
                         Image("bookmark-simple-fill")
@@ -1284,6 +1238,7 @@ struct AdaptiveGlassSaveButton: View {
             )
             .contentShape(Circle())
         }
+        .accessibilityLabel(state == .saved ? "Unsave article" : "Save article")
         .buttonStyle(AdaptiveGlassRippleButtonStyle(overrideIsDark: state == .saved ? true : overrideIsDark))
         .glassEffect(
             state == .saved
@@ -1298,10 +1253,6 @@ struct AdaptiveGlassSaveButton: View {
             y: state == .saved ? 3 : 2
         )
         .animation(.spring(response: 0.44, dampingFraction: 0.74), value: state)
-        .onDisappear {
-            saveTask?.cancel()
-            saveTask = nil
-        }
     }
 }
 

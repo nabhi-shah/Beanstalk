@@ -46,6 +46,7 @@ struct MainCoordinator: View {
     @State private var appState: AppState = .login
     @State private var selectedArticle: Article? = nil
     @State private var selectedTab: MainTab = .home
+    @State private var saveToastID: UUID?
     @Namespace private var animationNamespace
 
     var body: some View {
@@ -90,6 +91,31 @@ struct MainCoordinator: View {
                 .zIndex(100)
                 .allowsHitTesting(false)
             }
+        }
+        .environment(\.articleDidSave, {
+            saveToastID = UUID()
+        })
+        .overlay {
+            if let toastID = saveToastID {
+                ArticleSavedToast(
+                    onViewSaved: {
+                        saveToastID = nil
+                        withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) {
+                            selectedArticle = nil
+                            selectedTab = .saved
+                        }
+                    },
+                    onDismiss: {
+                        if saveToastID == toastID {
+                            saveToastID = nil
+                        }
+                    }
+                )
+                .id(toastID)
+            }
+        }
+        .onChange(of: selectedTab) { _, newValue in
+            if newValue != .home { saveToastID = nil }
         }
         .animation(.spring(response: 0.7, dampingFraction: 0.8), value: appState)
     }

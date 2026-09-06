@@ -151,11 +151,11 @@ struct FeedContentView: View {
                     lastOffset = offset
                     
                     if offset >= 0 {
-                        withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8)) {
+                        withAnimation(.easeOut(duration: 0.15)) {
                             minimizeProgress = 0
                         }
                     } else {
-                        withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8)) {
+                        withAnimation(.easeOut(duration: 0.15)) {
                             let newProgress = minimizeProgress + Double(delta / 100.0)
                             minimizeProgress = min(max(newProgress, 0), 1)
                         }

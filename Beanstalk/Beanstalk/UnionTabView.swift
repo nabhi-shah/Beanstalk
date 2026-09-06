@@ -112,7 +112,7 @@ public struct UnionTabView<Tab: Hashable, Content: View, TabItemContent: View>: 
         hideOffset: CGFloat = 0,
         contentHeight: CGFloat = UnionTabBarMetrics.contentHeight,
         glassTint: Color? = nil,
-        minimizeAnimation: Animation? = .spring(duration: 0.3),
+        minimizeAnimation: Animation? = .easeOut(duration: 0.2),
         isActionTab: @escaping (Tab) -> Bool = { _ in false },
         onActionTab: ((Tab) -> Void)? = nil,
         onReselect: ((Tab) -> Void)? = nil,

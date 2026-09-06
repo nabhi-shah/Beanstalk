@@ -425,6 +425,8 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
         let tap = UITapGestureRecognizer(target: self, action: #selector(handleHighlightTap(_:)))
         tap.delegate = self
         tap.cancelsTouchesInView = false
+        tap.delaysTouchesBegan = false
+        tap.delaysTouchesEnded = false
         self.addGestureRecognizer(tap)
     }
     
@@ -450,6 +452,9 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
         }
         if let host = activeActionHostingController, host.view.frame.insetBy(dx: -16, dy: -16).contains(loc) {
             return false
+        }
+        if gestureRecognizer is UITapGestureRecognizer {
+            return true
         }
         return super.gestureRecognizerShouldBegin(gestureRecognizer)
     }
@@ -1083,9 +1088,10 @@ struct SelectableTextView: UIViewRepresentable {
     var attributedText: AttributedString
     var font: UIFont
     var textColor: UIColor
-    var lineSpacing: CGFloat
-    var tintColor: UIColor
+    var lineSpacing: CGFloat = 6.0
+    var tintColor: UIColor = .systemBlue
     @Binding var highlightedRanges: [HighlightRange]
+    var isTextSelectable: Bool = true
     
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
@@ -1120,7 +1126,7 @@ struct SelectableTextView: UIViewRepresentable {
     func makeUIView(context: Context) -> CustomSelectableTextView {
         let textView = CustomSelectableTextView()
         textView.isEditable = false
-        textView.isSelectable = true
+        textView.isSelectable = isTextSelectable
         textView.isScrollEnabled = false
         textView.backgroundColor = .clear
         textView.textContainerInset = .zero
@@ -1152,6 +1158,10 @@ struct SelectableTextView: UIViewRepresentable {
     
     func updateUIView(_ uiView: CustomSelectableTextView, context: Context) {
         context.coordinator.parent = self
+        
+        if uiView.isSelectable != isTextSelectable {
+            uiView.isSelectable = isTextSelectable
+        }
         
         let nsAttributedString = try? NSAttributedString(attributedText, including: \.uiKit)
         let mutableString = NSMutableAttributedString(attributedString: nsAttributedString ?? NSAttributedString())

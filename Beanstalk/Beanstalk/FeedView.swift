@@ -599,9 +599,9 @@ struct ArticleRowView: View {
                         textColor: UIColor(white: 0.35, alpha: 1.0),
                         lineSpacing: 6,
                         tintColor: UIColor(Color.brandGreen),
-                        highlightedRanges: $contentHighlights
+                        highlightedRanges: $contentHighlights,
+                        isTextSelectable: isTextSelectable
                     )
-                    .allowsHitTesting(isTextSelectable)
                     .tint(.brandGreen)
                     .padding(.horizontal, 24)
                     .padding(.bottom, 120) // Space for FAB and dots
@@ -806,9 +806,9 @@ struct ArticleRowView: View {
                             textColor: UIColor(white: 0.35, alpha: 1.0),
                             lineSpacing: 4,
                             tintColor: UIColor(Color.brandGreen),
-                            highlightedRanges: $summaryHighlights
+                            highlightedRanges: $summaryHighlights,
+                            isTextSelectable: isTextSelectable
                         )
-                        .allowsHitTesting(isTextSelectable)
                         .tint(.brandGreen)
                         .padding(.top, 8)
                         .transition(.opacity.combined(with: .move(edge: .bottom)))

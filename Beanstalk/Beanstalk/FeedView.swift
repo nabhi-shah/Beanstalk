@@ -205,6 +205,8 @@ struct ArticleRowView: View {
     @State private var saveButtonState: SaveButtonState = .unsaved
     @State private var loadedImage: UIImage? = nil
     @State private var keyboardHeight: CGFloat = 0
+    @FocusState private var isChatFocused: Bool
+    @State private var focusedTextInputMaxY: CGFloat? = nil
     
     private var currentImage: Image? {
         if let loadedImage = loadedImage {
@@ -363,7 +365,12 @@ struct ArticleRowView: View {
                 .animation(.easeInOut(duration: 0.2), value: frontCardIndex)
             }
         }
-        .offset(y: -keyboardHeight * 0.85) // Shift cards up by 85% of keyboard height so top text isn't fully lost
+        .offset(y: dynamicKeyboardOffset)
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("FocusedTextInputMaxY"))) { notification in
+            if let maxY = notification.userInfo?["maxY"] as? CGFloat {
+                self.focusedTextInputMaxY = maxY
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
             if isExpanded, let frame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
                 withAnimation(.easeOut(duration: 0.25)) {
@@ -374,6 +381,7 @@ struct ArticleRowView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
             withAnimation(.easeOut(duration: 0.25)) {
                 self.keyboardHeight = 0
+                self.focusedTextInputMaxY = nil
             }
         }
         .onChange(of: isExpanded) { oldValue, newValue in
@@ -495,6 +503,27 @@ struct ArticleRowView: View {
         // Screen height - safeTop - safeBottom - 20 (dots) - 12 (spacing)
         let calculated = UIScreen.main.bounds.height - safeTop - safeBottom - 32
         return max(calculated, 600) // Ensure it doesn't get ridiculously small on tiny screens
+    }
+    
+    private var dynamicKeyboardOffset: CGFloat {
+        guard keyboardHeight > 0 else { return 0 }
+        guard let maxY = focusedTextInputMaxY else {
+            return -keyboardHeight * 0.85 // fallback
+        }
+        
+        let screenHeight = UIScreen.main.bounds.height
+        let keyboardTop = screenHeight - keyboardHeight
+        
+        // Ensure the input field's bottom (maxY) is above the keyboard top by at least 14 points padding
+        let neededShift = maxY - keyboardTop + 14
+        
+        if neededShift > 0 {
+            // Shift up just enough so the menu is visible, capped at full keyboard height to avoid clipping top UI
+            return -min(neededShift, keyboardHeight)
+        } else {
+            // The input is naturally above the keyboard, no shift needed
+            return 0
+        }
     }
     
     @ViewBuilder
@@ -878,6 +907,7 @@ struct ArticleRowView: View {
     private func chatInputView() -> some View {
         HStack(alignment: .bottom, spacing: 12) {
             TextField("Chat with the article...", text: $chatInputText, axis: .vertical)
+                .focused($isChatFocused)
                 .font(.custom("InclusiveSans-Regular", size: 16))
                 .foregroundColor(.textDark)
                 .padding(.horizontal, 16)
@@ -904,6 +934,15 @@ struct ArticleRowView: View {
         .background(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
                 .fill(Color.white)
+                .background(
+                    GeometryReader { geo in
+                        Color.clear.onChange(of: isChatFocused) { _, isFocused in
+                            if isFocused {
+                                NotificationCenter.default.post(name: NSNotification.Name("FocusedTextInputMaxY"), object: nil, userInfo: ["maxY": geo.frame(in: .global).maxY])
+                            }
+                        }
+                    }
+                )
         )
         .padding(.horizontal, 12)
     }

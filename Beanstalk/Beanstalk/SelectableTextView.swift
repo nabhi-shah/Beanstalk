@@ -838,6 +838,11 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
                 vm?.isAbove = p.isAbove
                 vm?.selectionMidX = p.pointerMidX
                 vm?.textViewWidth = self.bounds.width
+                
+                if let window = self.window {
+                    let globalFrame = self.convert(p.frame, to: window)
+                    NotificationCenter.default.post(name: NSNotification.Name("FocusedTextInputMaxY"), object: nil, userInfo: ["maxY": globalFrame.maxY])
+                }
             },
             onCancelAddNote: { [weak self, weak vm] in
                 guard let self = self else { return }
@@ -864,6 +869,11 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
                 
                 UIView.animate(withDuration: 0.44, delay: 0, usingSpringWithDamping: 0.74, initialSpringVelocity: 0.1, options: [.curveEaseInOut, .allowUserInteraction, .beginFromCurrentState]) {
                     host.view.frame = p.frame
+                }
+                
+                if self.pendingNoteRange != nil, let window = self.window {
+                    let globalFrame = self.convert(p.frame, to: window)
+                    NotificationCenter.default.post(name: NSNotification.Name("FocusedTextInputMaxY"), object: nil, userInfo: ["maxY": globalFrame.maxY])
                 }
             }
         )

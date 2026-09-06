@@ -594,9 +594,9 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
                 contentHeight = max(50, min(textHeight + 28, 140))
             }
             
-            let isAbove = (targetBox.minY - contentHeight - 14) >= 8
+            let isAbove = true
             let x = max(8, min(targetBox.midX - contentWidth / 2, self.bounds.width - contentWidth - 8))
-            let y = isAbove ? (targetBox.minY - contentHeight - 8) : (targetBox.maxY + 8)
+            let y = targetBox.minY - contentHeight - 8
             let pointerX = targetBox.midX - x
             
             let noteView = NoteDisplayMenuView(
@@ -636,9 +636,9 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
             host.view.backgroundColor = .clear
             
             let menuSize = CGSize(width: 104, height: 38)
-            let isAbove = (targetBox.minY - menuSize.height - 14) >= 8
+            let isAbove = true
             let x = max(8, min(targetBox.midX - menuSize.width / 2, self.bounds.width - menuSize.width - 8))
-            let y = isAbove ? (targetBox.minY - menuSize.height - 8) : (targetBox.maxY + 8)
+            let y = targetBox.minY - menuSize.height - 8
             let frame = CGRect(origin: CGPoint(x: x, y: y), size: menuSize)
             
             host.view.frame = frame
@@ -754,17 +754,13 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
         
         // 12pt vertical clearance so menu never overlaps selected text
         let clearance: CGFloat = 12
-        let isAbove = (unionRect.minY - menuSize.height - clearance) >= 8
+        // Always place on top to prevent iOS keyboard overlap during text entry
+        let isAbove = true
         
         let targetMidX = isAbove ? firstBox.midX : lastBox.midX
         let x = max(8, min(targetMidX - menuSize.width / 2, self.bounds.width - menuSize.width - 8))
         
-        let y: CGFloat
-        if isAbove {
-            y = unionRect.minY - menuSize.height - clearance
-        } else {
-            y = unionRect.maxY + clearance
-        }
+        let y = unionRect.minY - menuSize.height - clearance
         
         let frame = CGRect(origin: CGPoint(x: x, y: y), size: menuSize)
         return (frame, isAbove, targetMidX)

@@ -840,8 +840,12 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
                 vm?.textViewWidth = self.bounds.width
                 
                 if let window = self.window {
-                    let globalFrame = self.convert(p.frame, to: window)
-                    NotificationCenter.default.post(name: NSNotification.Name("FocusedTextInputMaxY"), object: nil, userInfo: ["maxY": globalFrame.maxY])
+                    let boxes = self.rects(for: selRange)
+                    if let first = boxes.first {
+                        let unionRect = boxes.dropFirst().reduce(first) { $0.union($1) }
+                        let globalHighlightFrame = self.convert(unionRect, to: window)
+                        NotificationCenter.default.post(name: NSNotification.Name("FocusedTextInputMaxY"), object: nil, userInfo: ["maxY": globalHighlightFrame.maxY])
+                    }
                 }
             },
             onCancelAddNote: { [weak self, weak vm] in
@@ -871,9 +875,13 @@ class CustomSelectableTextView: UITextView, UITextViewDelegate, UIGestureRecogni
                     host.view.frame = p.frame
                 }
                 
-                if self.pendingNoteRange != nil, let window = self.window {
-                    let globalFrame = self.convert(p.frame, to: window)
-                    NotificationCenter.default.post(name: NSNotification.Name("FocusedTextInputMaxY"), object: nil, userInfo: ["maxY": globalFrame.maxY])
+                if let r = self.pendingNoteRange, let window = self.window {
+                    let boxes = self.rects(for: r)
+                    if let first = boxes.first {
+                        let unionRect = boxes.dropFirst().reduce(first) { $0.union($1) }
+                        let globalHighlightFrame = self.convert(unionRect, to: window)
+                        NotificationCenter.default.post(name: NSNotification.Name("FocusedTextInputMaxY"), object: nil, userInfo: ["maxY": globalHighlightFrame.maxY])
+                    }
                 }
             }
         )

@@ -1,3 +1,4 @@
+# Script to process and update FeedView.swift
 import re
 
 with open("/Users/nabhi/Desktop/Projects/Beanstalk/Beanstalk/Beanstalk/FeedView.swift", "r") as f:
